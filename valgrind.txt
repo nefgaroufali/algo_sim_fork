@@ -1,1 +1,1 @@
-valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./spice_sim circuit1
+valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes ./spice_sim circuit1.txt
