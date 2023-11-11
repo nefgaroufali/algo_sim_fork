@@ -84,6 +84,7 @@ int create_arrays(){
             fill_with_v(current);
         }
         else if(current->comp_type == 'c'){
+            current = current->next;
             continue;
         }
         else if(current->comp_type == 'l'){
