@@ -168,6 +168,8 @@ int fill_with_v(component* current){
         b_array[nodes_n-1+count] = current->value;
     }
 
+    count++;
+
     return(1);
 }
 
@@ -196,6 +198,8 @@ int fill_with_l(component* current){
         A_array[nodes_n-1+count][positive_node-1] = 1;
         b_array[nodes_n-1+count] = 0;
     }
+
+    count++;
 
     return(1);
 }
