@@ -155,7 +155,7 @@ void print_hash_table(hash_table *ht) {
         hash_node *current = ht->table[i];
 
         while (current != NULL) {
-            printf("Index %d: %s with node index %d\n", i, current->node_str, current->node_index);
+            printf("Hash index %d: %s with node index %d\n", i, current->node_str, current->node_index);
             current = current->next;
         }
     }

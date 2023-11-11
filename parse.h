@@ -12,11 +12,15 @@
 #define IS_BLANK 1
 
 extern char valid_comp_list[16];
+extern int nodes_n; // circuit nodes INCLUDING ground
+extern int m2;      // circuit branches that correspond to voltage sources or inductors
 
 void parse(char *file_name);
 int parse_line(char *line);
 int valid_comp_type(char comp_type);
 int is_blank_line(const char *line);
 char* str_tolower(char *str);
+int isnot_ground(char *node);
+int check_for_V_or_L(char comp_type);
 
 #endif

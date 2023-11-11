@@ -5,7 +5,7 @@ CC = gcc -ggdb
 CFLAGS = -Wall  -std=c11
 
 # Source files
-SRC = main.c parse.c structs.c
+SRC = main.c parse.c structs.c equations.c
 
 # Object files
 OBJ = $(SRC:.c=.o)

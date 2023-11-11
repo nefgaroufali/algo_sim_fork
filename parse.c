@@ -8,6 +8,9 @@
 char valid_comp_list[16] = {'V', 'I', 'R', 'C', 'L', 'D', 'M', 'Q', 
                            'v', 'i', 'r', 'c', 'l', 'd', 'm', 'q'};
 
+int nodes_n = 0;
+int m2 = 0;
+
 void parse(char* file_name) {
 
     FILE *input_file;
@@ -73,6 +76,11 @@ int parse_line(char* line) {
     // Store the component type and name in lowercase
 
     comp_type = tolower(token[0]);
+
+    if ((check_for_V_or_L(comp_type)) == TRUE) {
+        m2++;
+    }
+
     comp_name = str_tolower(token);
 
     // String 2: Positive node name
@@ -89,6 +97,7 @@ int parse_line(char* line) {
 
     if (node_found == NOT_FOUND) {
         insert_node(&node_hash_table, str_tolower(positive_node));
+        nodes_n++;
     }  
 
     // String 3: Negative node name
@@ -102,8 +111,10 @@ int parse_line(char* line) {
     // Search  for the node in the hash table. If it doesnt exist, add it in lowercase
 
     node_found = find_hash_node(&node_hash_table, str_tolower(negative_node));
+
     if (node_found == NOT_FOUND) {
         insert_node(&node_hash_table, str_tolower(negative_node));
+        nodes_n++;
     } 
  
     // String 4: Numeric value
@@ -155,3 +166,28 @@ char* str_tolower(char *str) {
 
     return str;
 }
+
+// This function checks if the given node is ground or not
+int isnot_ground(char *node) {
+
+    if ((node[0] == '0') && (node[1] == '\0')) {
+        return 0;
+    }
+
+    return 1;
+}
+
+// This function checks if the component type is a voltage source or an inductor
+int check_for_V_or_L(char comp_type) {
+
+    if (comp_type == 'v' || comp_type == 'l') {
+        return 1;
+    }
+
+    return 0;
+
+}
+
+
+
+

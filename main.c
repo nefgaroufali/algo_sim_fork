@@ -4,6 +4,7 @@
 #include "main.h"
 #include "parse.h"
 #include "structs.h"
+#include "equations.h"
 
 int main(int argc, char* argv[]) {
 
@@ -19,6 +20,11 @@ int main(int argc, char* argv[]) {
     parse(file_name);
 
     print_hash_table(&node_hash_table);
+    print_comp_list(head);
+
+    printf("NUmber of nodes (INCLUDING ground) is %d and number of V or L branches is %d\n", nodes_n, m2);
+
+    //create_equations();
 
     free_hash_table(&node_hash_table);
     free_comp_list(head);
