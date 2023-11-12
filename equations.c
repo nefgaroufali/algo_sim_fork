@@ -9,14 +9,14 @@
 
 double** A_array;
 double* b_array;
-int count = 0;
+int m2_count = 0;
 
 // Function prototypes for filling the arrays
-int fill_with_i(component* current);
-int fill_with_r(component* current);
-int fill_with_v(component* current);
-int fill_with_c(component* current);
-int fill_with_l(component* current);
+void fill_with_i(component* current);
+void fill_with_r(component* current);
+void fill_with_v(component* current);
+void fill_with_c(component* current);
+void fill_with_l(component* current);
 
 double** alloc_A_array() {
 
@@ -69,7 +69,7 @@ double* alloc_b_array() {
 }
 
 
-int create_arrays(){
+void create_arrays(){
 
     component* current = head;
 
@@ -85,21 +85,21 @@ int create_arrays(){
         else if(current->comp_type == 'v'){
             fill_with_v(current);
         }
-        else if(current->comp_type == 'c'){
-            current = current->next;
-            continue;
-        }
+        // else if(current->comp_type == 'c'){
+        //     current = current->next;
+        //     continue;
+        // }
         else if(current->comp_type == 'l'){
             fill_with_l(current);
         }
 
         current = current->next;
     }
-    return(1);
+    return;
 }
 
 // Component: R ---> Fill A1*G*A1t array
-int fill_with_r(component* current){
+void fill_with_r(component* current){
 
     int positive_node;
     int negative_node;
@@ -124,11 +124,11 @@ int fill_with_r(component* current){
         A_array[positive_node-1][negative_node-1] += -1/current->value;
     }
 
-    return(1);
+    return;
 }
 
 // Component: I ---> Fill b array
-int fill_with_i(component* current){
+void fill_with_i(component* current){
 
     int positive_node;
     int negative_node;
@@ -151,11 +151,11 @@ int fill_with_i(component* current){
         b_array[positive_node-1] += -current->value;
     }
 
-    return(1);
+    return;
 }
 
 // Component: V ---> Fill A2t, A2 array and b array
-int fill_with_v(component* current){
+void fill_with_v(component* current){
 
     int positive_node;
     int negative_node;
@@ -166,32 +166,32 @@ int fill_with_v(component* current){
 
     // Case: v 0 x value
     if(positive_node == 0){
-        A_array[negative_node-1][nodes_n-1+count] = -1;
-        A_array[nodes_n-1+count][negative_node-1] = -1;
-        b_array[nodes_n-1+count] = current->value;
+        A_array[negative_node-1][nodes_n-1+m2_count] = -1;
+        A_array[nodes_n-1+m2_count][negative_node-1] = -1;
+        b_array[nodes_n-1+m2_count] = current->value;
     }
     // Case: v x 0 value
     else if(negative_node == 0){
-        A_array[positive_node-1][nodes_n-1+count] = 1;
-        A_array[nodes_n-1+count][positive_node-1] = 1;
-        b_array[nodes_n-1+count] = current->value;
+        A_array[positive_node-1][nodes_n-1+m2_count] = 1;
+        A_array[nodes_n-1+m2_count][positive_node-1] = 1;
+        b_array[nodes_n-1+m2_count] = current->value;
     }
     // Case: v x y value
     else{
-        A_array[negative_node-1][nodes_n-1+count] = -1;
-        A_array[nodes_n-1+count][negative_node-1] = -1;
-        A_array[positive_node-1][nodes_n-1+count] = 1;
-        A_array[nodes_n-1+count][positive_node-1] = 1;
-        b_array[nodes_n-1+count] = current->value;
+        A_array[negative_node-1][nodes_n-1+m2_count] = -1;
+        A_array[nodes_n-1+m2_count][negative_node-1] = -1;
+        A_array[positive_node-1][nodes_n-1+m2_count] = 1;
+        A_array[nodes_n-1+m2_count][positive_node-1] = 1;
+        b_array[nodes_n-1+m2_count] = current->value;
     }
 
-    count++;
+    m2_count++;
 
-    return(1);
+    return;
 }
 
 // Component: L ---> Fill A2t, A2 array and b array (V node+ node- 0)
-int fill_with_l(component* current){
+void fill_with_l(component* current){
 
     int positive_node;
     int negative_node;
@@ -200,30 +200,30 @@ int fill_with_l(component* current){
     positive_node = find_hash_node(&node_hash_table, str_tolower(current->positive_node));
     negative_node = find_hash_node(&node_hash_table, str_tolower(current->negative_node));
 
-    // Case: v 0 x value
+    // Case: l 0 x value
     if(positive_node == 0){
-        A_array[negative_node-1][nodes_n-1+count] = -1;
-        A_array[nodes_n-1+count][negative_node-1] = -1;
-        b_array[nodes_n-1+count] = 0;
+        A_array[negative_node-1][nodes_n-1+m2_count] = -1;
+        A_array[nodes_n-1+m2_count][negative_node-1] = -1;
+        b_array[nodes_n-1+m2_count] = 0;
     }
-    // Case: v x 0 value
+    // Case: l x 0 value
     else if(negative_node == 0){
-        A_array[positive_node-1][nodes_n-1+count] = 1;
-        A_array[nodes_n-1+count][positive_node-1] = 1;
-        b_array[nodes_n-1+count] = 0;
+        A_array[positive_node-1][nodes_n-1+m2_count] = 1;
+        A_array[nodes_n-1+m2_count][positive_node-1] = 1;
+        b_array[nodes_n-1+m2_count] = 0;
     }
-    // Case: v x y value
+    // Case: l x y value
     else{
-        A_array[negative_node-1][nodes_n-1+count] = -1;
-        A_array[nodes_n-1+count][negative_node-1] = -1;
-        A_array[positive_node-1][nodes_n-1+count] = 1;
-        A_array[nodes_n-1+count][positive_node-1] = 1;
-        b_array[nodes_n-1+count] = 0;
+        A_array[negative_node-1][nodes_n-1+m2_count] = -1;
+        A_array[nodes_n-1+m2_count][negative_node-1] = -1;
+        A_array[positive_node-1][nodes_n-1+m2_count] = 1;
+        A_array[nodes_n-1+m2_count][positive_node-1] = 1;
+        b_array[nodes_n-1+m2_count] = 0;
     }
 
-    count++;
+    m2_count++;
 
-    return(1);
+    return;
 }
 
 // print the arrays A and b
