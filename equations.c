@@ -7,21 +7,15 @@
 #include "parse.h"
 
 
-double** A_array;
-double* b_array;
+double** A_array = NULL;
+double* b_array = NULL;
 int m2_count = 0;
-
-// Function prototypes for filling the arrays
-void fill_with_i(component* current);
-void fill_with_r(component* current);
-void fill_with_v(component* current);
-void fill_with_c(component* current);
-void fill_with_l(component* current);
+int A_dim = 0;
 
 double** alloc_A_array() {
 
     // Allocate memory for the array of pointers to rows
-    double** new_array = (double**)calloc((nodes_n-1 + m2), sizeof(double*));
+    double** new_array = (double**)calloc((A_dim), sizeof(double*));
 
     // Check if memory allocation was successful
     if (new_array == NULL) {
@@ -30,8 +24,8 @@ double** alloc_A_array() {
     }
 
     // Allocate memory for each row
-    for (int i = 0; i < (nodes_n-1 + m2); i++) {
-        new_array[i] = (double*)calloc((nodes_n-1 + m2), sizeof(double));
+    for (int i = 0; i < (A_dim); i++) {
+        new_array[i] = (double*)calloc((A_dim), sizeof(double));
 
         // Check if memory allocation was successful
         if (new_array[i] == NULL) {
@@ -55,7 +49,7 @@ double** alloc_A_array() {
 double* alloc_b_array() {
 
     // Allocate memory for the array of pointers to rows
-    double* new_array = (double*)calloc((nodes_n-1 + m2), sizeof(double));
+    double* new_array = (double*)calloc((A_dim), sizeof(double));
 
     // Check if memory allocation was successful
     if (new_array == NULL) {
@@ -232,8 +226,8 @@ void print_arrays(){
     
     printf("\n *** Printing A array *** \n");
 
-    for (int i = 0; i < (nodes_n-1 + m2); i++) {
-        for (int j = 0; j < (nodes_n-1 + m2); j++) {
+    for (int i = 0; i < (A_dim); i++) {
+        for (int j = 0; j < (A_dim); j++) {
             printf("%.2lf\t", A_array[i][j]);
         }
         printf("\n");
@@ -241,7 +235,7 @@ void print_arrays(){
 
     printf("\n *** Printing b array *** \n");
 
-    for (int k = 0; k < nodes_n-1 + m2; k++) {
+    for (int k = 0; k < A_dim; k++) {
         printf("%.2lf\t", b_array[k]);
     }
     printf("\n");
@@ -251,7 +245,7 @@ void print_arrays(){
 
 // Function to free the memory allocated for a (n+m) x (n+m) array
 void free_A_array() {
-    for (int i = 0; i < nodes_n-1 + m2; i++) {
+    for (int i = 0; i < A_dim; i++) {
         free(A_array[i]);
     }
     free(A_array);
@@ -263,6 +257,8 @@ void free_b_array() {
 }
 
 void create_equations(){
+
+    A_dim = nodes_n -1 + m2;    // A: (n-1+m2)(n-1+m2)
 
     alloc_A_array();
     alloc_b_array();

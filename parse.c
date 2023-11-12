@@ -35,7 +35,7 @@ void parse(char* file_name) {
 
         // If the parsing fails, free the memory and exit.
         if (parse_line_result == PARSING_ERROR) {
-            printf("Invalid Syntax!!\n");
+            printf("Invalid Syntax!! at line %s\n", line);
             free_comp_list(head);
             free_hash_table(&node_hash_table);
             fclose(input_file);
@@ -61,12 +61,12 @@ int parse_line(char* line) {
     token = strtok(line, " \t");
 
     // If the first character is an asterisk, the line is a comment
-    if (strcmp(token, "*") == 0) {
+    if (token[0] == '*'){
         return 1; 
     }
 
     // Spice command: For now this will be treated as a comment
-    if (strcmp(token, ".") == 0) {
+    if (token[0] == '.') {
         return 1;
     }
 
