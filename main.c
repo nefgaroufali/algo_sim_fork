@@ -24,10 +24,12 @@ int main(int argc, char* argv[]) {
 
     printf("NUmber of nodes (INCLUDING ground) is %d and number of V or L branches is %d\n", nodes_n, m2);
 
-    //create_equations();
+    create_equations();
 
     free_hash_table(&node_hash_table);
     free_comp_list(head);
+    free_A_array();
+    free_b_array();
     
     return 0;
 

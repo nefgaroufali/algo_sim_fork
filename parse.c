@@ -56,6 +56,7 @@ int parse_line(char* line) {
     double value;
     int node_found;
 
+
     // String 1: Type of circuit element & name
     token = strtok(line, " \t");
 

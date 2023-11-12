@@ -6,7 +6,7 @@
 
 component* head = NULL;
 component* tail = NULL;
-int index_counter = 0;
+int index_counter = 1;
 hash_table node_hash_table;
 
 
@@ -109,6 +109,13 @@ hash_node *create_hash_node(char *node_str) {
     strcpy(new_node->node_str, node_str);
 
     // Node index: The order in which each node is added. Irrelevant to the hash key.
+    // Reserve the node index value of "0" for the ground node
+    if(strcmp(new_node->node_str,"0")==0){
+        new_node->node_index = 0;
+        new_node->next = NULL;
+
+        return new_node;    
+    }
     new_node->node_index = index_counter;
 
     new_node->next = NULL;
