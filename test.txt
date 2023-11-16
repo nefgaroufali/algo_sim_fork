@@ -1,0 +1,73 @@
+// Component: V ---> Fill A2t, A2 array and b array
+void fill_with_v(component* current){
+
+    int positive_node_i;
+    int negative_node_i;
+    int m2_i = nodes_n - 1 + m2_count;
+
+    // Take the node_index of each node
+    positive_node_i = find_hash_node(&node_hash_table, str_tolower(current->positive_node_i));
+    negative_node_i = find_hash_node(&node_hash_table, str_tolower(current->negative_node_i));
+
+    // Case: v 0 x value
+    if(positive_node_i == 0){
+        A_array[(negative_node_i-1)*A_dim +m2_i] = -1;
+        A_array[m2_i*A_dim +(negative_node_i-1)] = -1;
+        b_array[m2_i] = current->value;
+    }
+    // Case: v x 0 value
+    else if(negative_node_i == 0){
+        A_array[(positive_node_i-1)*A_dim+m2_i] = 1;
+        A_array[m2_i*A_dim +(positive_node_i-1)] = 1;
+        b_array[m2_i] = current->value;
+    }
+    // Case: v x y value
+    else{
+        A_array[(negative_node_i-1)*A_dim +m2_i] = -1;
+        A_array[m2_i*A_dim +(negative_node_i-1)] = -1;
+        A_array[(positive_node_i-1)*A_dim+m2_i] = 1;
+        A_array[m2_i*A_dim +(positive_node_i-1)] = 1;
+        b_array[m2_i] = current->value;
+    }
+
+    m2_count++;
+
+    return;
+}
+
+// Component: L ---> Fill A2t, A2 array and b array (V node+ node- 0)
+void fill_with_l(component* current){
+
+    int positive_node_i;
+    int negative_node_i;
+    int m2_i = nodes_n - 1 + m2_count;
+
+    // Take the node_index of each node
+    positive_node_i = find_hash_node(&node_hash_table, str_tolower(current->positive_node_i));
+    negative_node_i = find_hash_node(&node_hash_table, str_tolower(current->negative_node_i));
+
+    // Case: l 0 x value
+    if(positive_node_i == 0){
+        A_array[(negative_node_i-1)*A_dim +m2_i] = -1;
+        A_array[m2_i*A_dim +(negative_node_i-1)] = -1;
+        b_array[m2_i] = 0;
+    }
+    // Case: l x 0 value
+    else if(negative_node_i == 0){
+        A_array[(positive_node_i-1)*A_dim+m2_i] = 1;
+        A_array[m2_i*A_dim +(positive_node_i-1)] = 1;
+        b_array[m2_i] = 0;
+    }
+    // Case: l x y value
+    else{
+        A_array[(negative_node_i-1)*A_dim +m2_i] = -1;
+        A_array[m2_i*A_dim +(negative_node_i-1)] = -1;
+        A_array[(positive_node_i-1)*A_dim+m2_i] = 1;
+        A_array[m2_i*A_dim +(positive_node_i-1)] = 1;
+        b_array[m2_i] = 0;
+    }
+
+    m2_count++;
+
+    return;
+}

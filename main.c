@@ -8,7 +8,7 @@
 
 int main(int argc, char* argv[]) {
 
-    char file_name[20];
+    char file_name[40];
 
     // If there is no argument (or multiple arguments) exit
     if (argc!=2) {
@@ -19,10 +19,10 @@ int main(int argc, char* argv[]) {
     strcpy(file_name, argv[1]);
     parse(file_name);
 
-    print_hash_table(&node_hash_table);
-    print_comp_list(head);
+    // print_hash_table(&node_hash_table);
+    // print_comp_list(head);
 
-    printf("NUmber of nodes (INCLUDING ground) is %d and number of V or L branches is %d\n", nodes_n, m2);
+    // printf("NUmber of nodes (INCLUDING ground) is %d and number of V or L branches is %d\n", nodes_n, m2);
 
     create_equations();
 
