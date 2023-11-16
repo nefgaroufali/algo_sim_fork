@@ -1,0 +1,2 @@
+Must make array 2d
+Must make hash table dynamic, half of lines
