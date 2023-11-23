@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
 
     copy_to_A();
     form_LU();
-    //form_chol();
+    form_chol();
 
         free_gsl();
 

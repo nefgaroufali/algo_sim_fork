@@ -53,6 +53,7 @@ void free_gsl() {
 
      gsl_matrix_free(gsl_A);
      gsl_matrix_free(gsl_LU);
+     gsl_matrix_free(gsl_chol);
 }
 
 // This function forms the LU decomposition. 
@@ -83,9 +84,13 @@ void form_LU() {
 
 }
 
+// This function forms the cholesky decomposition
+// IMPORTANT: The array that is produced, contains A's elements in the upper triangular section.
+// So, only the lower triangular part (including the diagonal) contains elements of the new decomp.
+
 void form_chol() {
 
-    gsl_set_error_handler(&gslErrorHandler);
+    gsl_set_error_handler(&gslErrorHandler);    // Handle error for non-spd matrices
 
     int chol_success;
 
