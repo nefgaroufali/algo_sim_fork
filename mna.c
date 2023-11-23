@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "equations.h"
+#include "mna.h"
 #include "structs.h"
 #include "parse.h"
 
@@ -123,18 +123,20 @@ void fill_with_i(component* current){
     positive_node_i = find_hash_node(&node_hash_table, str_tolower(current->positive_node));
     negative_node_i = find_hash_node(&node_hash_table, str_tolower(current->negative_node));
 
+    printf("%d and %d but %f\n", positive_node_i, negative_node_i, current_i);
+
     // Case: i 0 x value
     if(positive_node_i == 0){
-        b_array[negative_node_i] += current_i;
+        b_array[negative_node_i-1] += current_i;
     }
     // Case: i x 0 value
     else if(negative_node_i == 0) {
-        b_array[positive_node_i] -= current_i;
+        b_array[positive_node_i-1] -= current_i;
     }
     // Case: i x y value
     else{
-        b_array[negative_node_i] += current_i;
-        b_array[positive_node_i] -= current_i;
+        b_array[negative_node_i-1] += current_i;
+        b_array[positive_node_i-1] -= current_i;
     }
 
     return;
@@ -256,7 +258,7 @@ void create_equations(){
     alloc_A_array();
     alloc_b_array();
     create_arrays();
-    //print_arrays();
+    print_arrays();
 
     return;
 }

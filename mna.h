@@ -1,5 +1,5 @@
-#ifndef EQUATIONS_H
-#define EQUATIONS_H
+#ifndef MNA_H
+#define MNA_H
 
 #include "structs.h"
 extern double* A_array; // The square matrix A we want to fill

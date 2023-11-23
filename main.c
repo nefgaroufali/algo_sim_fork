@@ -4,7 +4,8 @@
 #include "main.h"
 #include "parse.h"
 #include "structs.h"
-#include "equations.h"
+#include "mna.h"
+#include "direct_sol.h"
 
 int main(int argc, char* argv[]) {
 
@@ -19,12 +20,18 @@ int main(int argc, char* argv[]) {
     strcpy(file_name, argv[1]);
     parse(file_name);
 
-    // print_hash_table(&node_hash_table);
+    print_hash_table(&node_hash_table);
     // print_comp_list(head);
 
     // printf("NUmber of nodes (INCLUDING ground) is %d and number of V or L branches is %d\n", nodes_n, m2);
 
     create_equations();
+
+    copy_to_A();
+    form_LU();
+    //form_chol();
+
+        free_gsl();
 
     free_hash_table(&node_hash_table);
     free_comp_list(head);
