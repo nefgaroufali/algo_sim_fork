@@ -2,12 +2,12 @@
 #define EQUATIONS_H
 
 #include "structs.h"
-extern double** A_array; // The square matrix A we want to fill
+extern double* A_array; // The square matrix A we want to fill
 extern double* b_array; // The array b we want to fill
 extern int m2_count; // Variable to count how many elements V and L we have inserted
 extern int A_dim; // The dimension of the A matrix and b vector
 
-double** alloc_A_array();
+double* alloc_A_array();
 double* alloc_b_array();
 void create_arrays();
 void print_arrays();

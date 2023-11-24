@@ -97,6 +97,22 @@ unsigned long hash(char *str) {
     return (hash);
 }
 
+// This function creates the hash table dynamically //
+void create_hash_table(int size) {
+    
+        node_hash_table.size = size;
+        node_hash_table.table = (hash_node **) malloc(size * sizeof(hash_node *));
+        if (node_hash_table.table == NULL) {
+            printf("Error! Not enough memory.\n");
+            exit(EXIT_FAILURE);
+        }
+    
+        // Initialize the table with NULL
+        for (int i = 0; i < size; i++) {
+            node_hash_table.table[i] = NULL;
+        }
+}
+
 // This function creates a new hash node.
 hash_node *create_hash_node(char *node_str) {
     hash_node *new_node = (hash_node *) malloc(sizeof(hash_node));
@@ -127,9 +143,9 @@ hash_node *create_hash_node(char *node_str) {
 // This function inserts a string into the hash table
 void insert_node(hash_table *ht, char *node_str) {
     
-    int index = hash((char *)node_str)%HASH_TABLE_SIZE;
+    int index = hash((char *)node_str)%node_hash_table.size;
 
-    hash_node *new_node = create_hash_node(node_str);
+    hash_node* new_node = create_hash_node(node_str);
 
     // Insert the node at the beginning of the linked list (separate chaining)
     new_node->next = ht->table[index];
@@ -139,10 +155,10 @@ void insert_node(hash_table *ht, char *node_str) {
 // This function checks if a string is in the hash table
 int find_hash_node(hash_table *ht, char *node_str) {
 
-    int index = hash((char *)node_str)%HASH_TABLE_SIZE;
+    int index = hash((char *)node_str)%node_hash_table.size;
 
     // Search the linked list at the calculated index
-    hash_node *current = ht->table[index];
+    hash_node* current = ht->table[index];
 
     while (current != NULL) {
         if (strcmp(node_str, current->node_str) == 0) {
@@ -157,9 +173,11 @@ int find_hash_node(hash_table *ht, char *node_str) {
 // This function prints the hash table elements
 void print_hash_table(hash_table *ht) {
 
-    for (int i = 0; i < HASH_TABLE_SIZE; i++) {
+    printf("Hash table size is %d\n", ht->size);
 
-        hash_node *current = ht->table[i];
+    for (int i = 0; i < node_hash_table.size; i++) {
+
+        hash_node* current = ht->table[i];
 
         while (current != NULL) {
             printf("Hash index %d: %s with node index %d\n", i, current->node_str, current->node_index);
@@ -171,7 +189,7 @@ void print_hash_table(hash_table *ht) {
 // This function frees the nodes in the hash table
 void free_hash_table(hash_table *ht) {
 
-    for (int i = 0; i < HASH_TABLE_SIZE; i++) {
+    for (int i = 0; i < node_hash_table.size; i++) {
 
         hash_node *current = ht->table[i];
         while (current != NULL) {
@@ -181,6 +199,9 @@ void free_hash_table(hash_table *ht) {
             free(temp->node_str);
             free(temp);
         }
-        ht->table[i] = NULL; 
+        ht->table[i] = NULL;
     }
+
+    // Free the table itself
+    free(ht->table);
 }

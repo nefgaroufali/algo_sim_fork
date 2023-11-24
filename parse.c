@@ -10,12 +10,45 @@ char valid_comp_list[16] = {'V', 'I', 'R', 'C', 'L', 'D', 'M', 'Q',
 
 int nodes_n = 0;
 int m2 = 0;
+int hash_table_size = 0;
+int lines = 0;
+
+
+// This function counts the lines of the file //
+void number_of_lines(char* file_name){
+
+    FILE * input_file;
+    int character;
+
+    input_file = fopen(file_name, "r");
+
+    // Check if the file is valid
+    if (input_file == NULL) {
+        printf("Error opening file!\n");
+        exit(1);
+    }
+
+    while(!feof(input_file)){
+        character = fgetc(input_file);
+        if(character == '\n'){
+            lines++;
+        }
+    }
+
+    fclose(input_file);
+    return;
+}
 
 void parse(char* file_name) {
 
     FILE *input_file;
     char line[LINE_MAX];
     int parse_line_result;
+
+    // Find the number of lines in the file
+    // to alloc the hashtable
+    number_of_lines(file_name);
+    create_hash_table(lines/2);
 
     input_file = fopen(file_name, "r");
 

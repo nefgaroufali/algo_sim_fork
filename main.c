@@ -8,7 +8,7 @@
 
 int main(int argc, char* argv[]) {
 
-    char file_name[20];
+    char file_name[40];
 
     // If there is no argument (or multiple arguments) exit
     if (argc!=2) {

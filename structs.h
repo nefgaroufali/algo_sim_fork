@@ -1,7 +1,7 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
-#define HASH_TABLE_SIZE 500
+//#define HASH_TABLE_SIZE 500
 #define NOT_FOUND -1
 
 // The structure for a component
@@ -23,7 +23,8 @@ typedef struct hash_node {
 
 // The structure for the hash table
 typedef struct {
-    hash_node *table[HASH_TABLE_SIZE];
+    hash_node **table;
+    int size;
 } hash_table;
 
 extern component* head;
@@ -38,6 +39,7 @@ void print_comp_list(component* head);
 void free_comp_list(component* head);
 
 hash_node *create_hash_node(char *node_str);
+void create_hash_table(int size);
 void insert_node(hash_table *ht, char *node_str);
 int find_hash_node(hash_table *ht, char *node_str);
 void print_hash_table(hash_table *ht) ;
