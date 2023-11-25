@@ -27,11 +27,22 @@ int main(int argc, char* argv[]) {
 
     create_equations();
 
-    copy_to_A();
-    form_LU();
-    form_chol();
+    form_gsl_system();
 
-        free_gsl();
+
+    int solver_type = CHOL_SOL;
+    if (solver_type == LU_SOL) {
+        form_LU();
+    }
+    else {
+        form_chol();
+    }
+    
+
+
+    solve_dc_system(solver_type);
+
+    free_gsl();
 
     free_hash_table(&node_hash_table);
     free_comp_list(head);

@@ -123,8 +123,6 @@ void fill_with_i(component* current){
     positive_node_i = find_hash_node(&node_hash_table, str_tolower(current->positive_node));
     negative_node_i = find_hash_node(&node_hash_table, str_tolower(current->negative_node));
 
-    printf("%d and %d but %f\n", positive_node_i, negative_node_i, current_i);
-
     // Case: i 0 x value
     if(positive_node_i == 0){
         b_array[negative_node_i-1] += current_i;
