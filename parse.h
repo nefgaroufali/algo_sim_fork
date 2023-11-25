@@ -14,7 +14,9 @@
 extern char valid_comp_list[16];
 extern int nodes_n; // circuit nodes INCLUDING ground
 extern int m2;      // circuit branches that correspond to voltage sources or inductors
+extern int lines;
 
+void number_of_lines(char *file_name);
 void parse(char *file_name);
 int parse_line(char *line);
 int valid_comp_type(char comp_type);

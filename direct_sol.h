@@ -23,8 +23,6 @@ void free_gsl();
 void form_LU();
 void form_chol();
 void solve_dc_system(int solver_type);
-void solve_LU();
-void solve_chol();
 
 void gslErrorHandler(const char *reason, const char *file, int line, int gsl_errno);
 

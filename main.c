@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
     form_gsl_system();
 
 
-    int solver_type = CHOL_SOL;
+    int solver_type = LU_SOL;
     if (solver_type == LU_SOL) {
         form_LU();
     }

@@ -38,9 +38,9 @@ void form_gsl_system() {
         gsl_vector_set(gsl_b, i, b_array[i]);
     }
 
-    print_gsl_matrix(gsl_A, A_dim);
-    printf("\n");
-    print_gsl_vector(gsl_b, A_dim);
+    // print_gsl_matrix(gsl_A, A_dim);
+    // printf("\n");
+    // print_gsl_vector(gsl_b, A_dim);
 
     
 
@@ -100,14 +100,7 @@ void form_LU() {
     gsl_linalg_LU_decomp(gsl_LU, gsl_p, &signnum);
 
 
-    print_gsl_matrix(gsl_LU, A_dim);
-
-    for (int i=0; i<A_dim; i++) {
-        printf("%ld\n", gsl_permutation_get(gsl_p, i));
-    }
-
-    //gsl_permutation_free(permutation);
-
+    // print_gsl_matrix(gsl_LU, A_dim);
 
 
 }
@@ -128,10 +121,7 @@ void form_chol() {
     chol_success = gsl_linalg_cholesky_decomp1(gsl_chol);
 
     if (chol_success == GSL_EDOM) {
-        //fprintf(stderr, "Cholesky decomposition failed: Matrix is not positive definite\n");
-    }
-    else {
-        print_gsl_matrix(gsl_chol, A_dim);
+        fprintf(stderr, "Cholesky decomposition failed: Matrix is not positive definite\n");
     }
 
 
@@ -148,6 +138,9 @@ void gslErrorHandler(const char *reason, const char *file, int line, int gsl_err
     
     // In this example, we exit the program, but you might choose to do something else
 }
+
+// This function solves the  DC system, with LU or Cholesky, depending on whether the user has specified SPD circuit
+// Then writes the dc operating point in a .op file
 
 void solve_dc_system(int solver_type) {
 
@@ -169,18 +162,10 @@ void solve_dc_system(int solver_type) {
     op_file = fopen("dc_solution.op", "w");
 
     for (int i = 0; i < A_dim; i++) {
-        fprintf(op_file, "%s\t\t%.5lf\n", node_hash_table.table[1]->node_str, gsl_vector_get(gsl_x, i));
+        fprintf(op_file, "%.5lf\n",gsl_vector_get(gsl_x, i));
     }
 
     fclose(op_file);
 
-
-}
-
-void solve_LU() {
-
-}
-
-void solve_chol() {
 
 }
