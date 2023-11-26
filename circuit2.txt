@@ -1,22 +1,5 @@
 * Spice-like input file without .commands
 
-* Define resistors
-R1 NodeA NodeB 1e3
-R2 NodeB NodeC 5e2
-R3 NodeC NodeD 8e3
-R4 NodeD NodeE 2e4
+* Define resist
 
-* Define voltage sources
-V1 NodeA NodeC 1e3
-Vv NodeD NodeE 5e2
-
-* Define current sources
-I1 NodeB NodeC 2e-1
-
-* Define inductors
-L1 NodeA NodeE 1e-3
-l2 NodeC NodeD 5e-4
-
-* Define capacitors
-C1 NodeB NodeD 100e-6
-C2 NodeC NodeE 2e-5
+v1 3 0 1

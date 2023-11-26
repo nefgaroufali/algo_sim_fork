@@ -1,0 +1,16 @@
+* Larger SPICE Netlist with R, I, and C Components
+
+* Resistor
+R1 1 2 5
+R2 2 3 8
+R3 3 0 2
+
+* Current Source
+I1 2 0 0.6
+I2 3 0 1.8
+
+* Capacitor
+C1 1 3 7.4
+C2 2 0 3.2
+
+.OPTIONS SPD
