@@ -14,7 +14,7 @@
 extern char valid_comp_list[16];
 extern int nodes_n; // circuit nodes INCLUDING ground
 extern int m2;      // circuit branches that correspond to voltage sources or inductors
-extern int m2_i;    // index for V or L components
+extern int m2_i;
 extern int lines;
 extern int solver_type;
 

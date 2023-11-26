@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    //dc_sweep();
+    dc_sweep();
 
     free_gsl();
 

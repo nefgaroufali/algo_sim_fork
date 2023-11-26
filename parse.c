@@ -225,7 +225,7 @@ int parse_line(char* line) {
     value = strtod(token, NULL);
 
     // Add the component to the linked list
-    append_component(&head, &tail, comp_type, comp_name, positive_node, negative_node, value, m2_i);
+    append_component(&head, &tail, comp_type, comp_name, positive_node, negative_node, value);
 
     return PARSING_SUCCESSFUL;
 

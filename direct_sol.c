@@ -179,13 +179,29 @@ void solve_dc_system(int solver_type) {
 
 void dc_sweep() {
 
-    int i;
-    int low = DC_arguments[0];
-    int high = DC_arguments[1];
-    int step = DC_arguments[2];
+    double cur_value;
+    double low = DC_arguments[0];
+    double high = DC_arguments[1];
+    double step = DC_arguments[2];
 
-    for (i=low; i<=high; i=i+step) {
+    int pos_i, neg_i, node_i;
+
+    component *current = sweep_component;
+
+    if (current->comp_type == 'i') {
+        pos_i = find_hash_node(&node_hash_table, current->positive_node);
+        neg_i = find_hash_node(&node_hash_table, current->negative_node);
 
     }
+    else { // if current->comp_type == 'v
+        node_i = nodes_n - 1 +current->m2_i;
+
+    }
+    cur_value = low;
+    do {
+
+        cur_value = cur_value + step;
+    } while (cur_value <= high);
+
 
 }

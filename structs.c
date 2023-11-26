@@ -3,9 +3,12 @@
 #include <string.h>
 #include <ctype.h>
 #include "structs.h"
+#include "parse.h"
 
 component* head = NULL;
 component* tail = NULL;
+component *sweep_component = NULL;
+
 int index_counter = 1;
 hash_table node_hash_table;
 
@@ -14,7 +17,7 @@ hash_table node_hash_table;
 
 
 // This function creates a new component
-component* create_component(char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value, int m2_i) {
+component* create_component(char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value) {
 
     component* new_node = (component*) malloc(sizeof(component));
     if (new_node == NULL) {
@@ -44,9 +47,9 @@ component* create_component(char comp_type, const char* comp_name, const char* p
 }
 
 // This functions appends a component to the end of the list
-void append_component(component** head, component **tail, char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value, int m2_i) {
+void append_component(component** head, component **tail, char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value) {
 
-    component* new_node = create_component(comp_type, comp_name, positive_node, negative_node, value, m2_i);
+    component* new_node = create_component(comp_type, comp_name, positive_node, negative_node, value);
 
     // If the head is NULL, the lsit is empty, so we add it in both ends. Else, we only update the tail
 	if (*head == NULL) {
@@ -77,6 +80,7 @@ int find_component(const char* comp_name) {
         return NOT_V_OR_I;
     }
     else {
+        sweep_component = current;
         return FOUND;
     }
 }

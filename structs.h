@@ -32,12 +32,13 @@ typedef struct {
 
 extern component* head;
 extern component* tail;
+extern component *sweep_component;
 extern int index_counter;
 extern hash_table node_hash_table;
 
 // Function declarations
-component* create_component(char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value, int m2_i);
-void append_component(component** head, component **tail, char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value, int m2_i);
+component* create_component(char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value);
+void append_component(component** head, component **tail, char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value);
 void print_comp_list(component* head);
 void free_comp_list(component* head);
 int find_component(const char* comp_name);
