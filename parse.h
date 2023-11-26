@@ -14,7 +14,13 @@
 extern char valid_comp_list[16];
 extern int nodes_n; // circuit nodes INCLUDING ground
 extern int m2;      // circuit branches that correspond to voltage sources or inductors
+extern int m2_i;
+extern int lines;
+extern int solver_type;
 
+extern double DC_arguments[3];
+
+void number_of_lines(char *file_name);
 void parse(char *file_name);
 int parse_line(char *line);
 int valid_comp_type(char comp_type);
@@ -22,5 +28,6 @@ int is_blank_line(const char *line);
 char* str_tolower(char *str);
 int isnot_ground(char *node);
 int check_for_V_or_L(char comp_type);
+int parse_plot_arg(char *token);
 
 #endif
