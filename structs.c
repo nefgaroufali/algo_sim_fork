@@ -14,7 +14,7 @@ hash_table node_hash_table;
 
 
 // This function creates a new component
-component* create_component(char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value) {
+component* create_component(char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value, int m2_i) {
 
     component* new_node = (component*) malloc(sizeof(component));
     if (new_node == NULL) {
@@ -37,15 +37,16 @@ component* create_component(char comp_type, const char* comp_name, const char* p
     strcpy(new_node->positive_node, positive_node);
     strcpy(new_node->negative_node, negative_node);
     new_node->value = value;
+    new_node->m2_i = m2_i;
     new_node->next = NULL;
 
     return new_node;
 }
 
 // This functions appends a component to the end of the list
-void append_component(component** head, component **tail, char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value) {
+void append_component(component** head, component **tail, char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value, int m2_i) {
 
-    component* new_node = create_component(comp_type, comp_name, positive_node, negative_node, value);
+    component* new_node = create_component(comp_type, comp_name, positive_node, negative_node, value, m2_i);
 
     // If the head is NULL, the lsit is empty, so we add it in both ends. Else, we only update the tail
 	if (*head == NULL) {
@@ -57,14 +58,37 @@ void append_component(component** head, component **tail, char comp_type, const 
     }
 }
 
+// This functions takes the name of a component and searches it in the list
+int find_component(const char* comp_name) {
+
+    component* current = head;
+
+    while (current !=NULL) {
+        if (strcmp(current->comp_name, comp_name) == 0) {
+            break;
+        }
+        current = current->next;
+    }
+
+    if (current == NULL) {
+        return NOT_FOUND;
+    }
+    else if ((tolower(current->comp_type) != 'v') && (tolower(current->comp_type) != 'i')) {
+        return NOT_V_OR_I;
+    }
+    else {
+        return FOUND;
+    }
+}
+
 // This function prints all the components in the list
 void print_comp_list(component* head) {
 
     component* current = head;
 
     while (current != NULL) {
-        printf("Type: %c, Name: %s, Pos Node: %s, Neg Node: %s, Value: %lf\n",
-               current->comp_type, current->comp_name, current->positive_node, current->negative_node, current->value);
+        printf("Type: %c, Name: %s, Pos Node: %s, Neg Node: %s, Value: %lf m2_i: %d\n",
+               current->comp_type, current->comp_name, current->positive_node, current->negative_node, current->value, current->m2_i);
         current = current->next;
     }
 }

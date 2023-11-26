@@ -1,2 +1,3 @@
-Must make array 2d
-Must make hash table dynamic, half of lines
+
+1) Save operating points to different files, according to file name
+2) Leaks

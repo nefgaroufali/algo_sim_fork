@@ -20,8 +20,10 @@ int main(int argc, char* argv[]) {
     strcpy(file_name, argv[1]);
     parse(file_name);
 
+    printf("DC Parameters: %f %f %f\n", DC_arguments[0], DC_arguments[1], DC_arguments[2]);
+
     print_hash_table(&node_hash_table);
-    // print_comp_list(head);
+    print_comp_list(head);
 
     // printf("NUmber of nodes (INCLUDING ground) is %d and number of V or L branches is %d\n", nodes_n, m2);
 
@@ -30,17 +32,18 @@ int main(int argc, char* argv[]) {
     form_gsl_system();
 
 
-    int solver_type = LU_SOL;
     if (solver_type == LU_SOL) {
         form_LU();
+        solve_dc_system(LU_SOL);
     }
-    else {
+    else {  // if solver_type == CHOL_SOL
         form_chol();
+        if (spd == TRUE) {
+            solve_dc_system(CHOL_SOL);
+        }
     }
-    
 
-
-    solve_dc_system(solver_type);
+    //dc_sweep();
 
     free_gsl();
 

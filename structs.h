@@ -3,6 +3,8 @@
 
 #define HASH_TABLE_SIZE 500
 #define NOT_FOUND -1
+#define FOUND 1
+#define NOT_V_OR_I 0
 
 // The structure for a component
 typedef struct component {
@@ -11,6 +13,7 @@ typedef struct component {
     char* positive_node;
     char* negative_node;
     double value;
+    int m2_i;
     struct component* next;
 } component;
 
@@ -33,10 +36,11 @@ extern int index_counter;
 extern hash_table node_hash_table;
 
 // Function declarations
-component* create_component(char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value);
-void append_component(component** head, component **tail, char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value);
+component* create_component(char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value, int m2_i);
+void append_component(component** head, component **tail, char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value, int m2_i);
 void print_comp_list(component* head);
 void free_comp_list(component* head);
+int find_component(const char* comp_name);
 
 hash_node *create_hash_node(char *node_str);
 void create_hash_table(int size);

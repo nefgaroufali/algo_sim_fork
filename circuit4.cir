@@ -4,3 +4,9 @@ R1 2 0 2
 I1 0 2 2
 R2 1 2 4
 V1 1 0 3
+*.OPTIONS SPD
+
+.DC i1 0 4 0.5
+
+.plot v(2)
+.print i(1)

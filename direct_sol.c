@@ -5,6 +5,7 @@
 #include <gsl/gsl_errno.h>
 #include "mna.h"
 #include "structs.h"
+#include "parse.h"
 
 gsl_matrix* gsl_A = NULL;
 gsl_matrix* gsl_LU = NULL;
@@ -12,6 +13,8 @@ gsl_matrix* gsl_chol = NULL;
 gsl_vector *gsl_b = NULL;
 gsl_vector *gsl_x = NULL;
 gsl_permutation *gsl_p = NULL;
+
+int spd = FALSE;
 
 // This function copies the double array A made in mna.c, to a GSL array, to be used in the linear algebra routines
 // It also copies the elements of the b vector
@@ -120,9 +123,12 @@ void form_chol() {
 
     chol_success = gsl_linalg_cholesky_decomp1(gsl_chol);
 
-    if (chol_success == GSL_EDOM) {
-        fprintf(stderr, "Cholesky decomposition failed: Matrix is not positive definite\n");
+    if (chol_success != GSL_EDOM) {
+        spd = TRUE;
     }
+    // else {
+    //     fprintf(stderr, "Cholesky decomposition failed: Matrix is not positive definite\n");
+    // }
 
 
 }
@@ -161,11 +167,25 @@ void solve_dc_system(int solver_type) {
 
     op_file = fopen("dc_solution.op", "w");
 
+    // ONLY for the DC system!
     for (int i = 0; i < A_dim; i++) {
         fprintf(op_file, "%.5lf\n",gsl_vector_get(gsl_x, i));
     }
 
     fclose(op_file);
 
+
+}
+
+void dc_sweep() {
+
+    int i;
+    int low = DC_arguments[0];
+    int high = DC_arguments[1];
+    int step = DC_arguments[2];
+
+    for (i=low; i<=high; i=i+step) {
+
+    }
 
 }
