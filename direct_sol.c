@@ -68,7 +68,7 @@ void print_gsl_vector(gsl_vector *vector, int dim){
 
     printf("\n");
     for (i = 0; i < dim; i++) {
-        printf ("%.2lf ", gsl_vector_get(vector, i));
+        printf ("%.5lf\n", gsl_vector_get(vector, i));
     }
     printf("\n");
 
@@ -184,7 +184,7 @@ void dc_sweep() {
     double high = DC_arguments[1];
     double step = DC_arguments[2];
 
-    int pos_i, neg_i, sweep_node_i;
+    int pos_sweep_node_i, neg_sweep_node_i, sweep_node_i;
 
     // Temp_gsl_b: Same as gsl_b, with only the sweep value changing
 
@@ -193,30 +193,48 @@ void dc_sweep() {
 
     component *current = sweep_component;
 
-    // if (current->comp_type == 'i') {
-    //     pos_i = find_hash_node(&node_hash_table, current->positive_node);
-    //     neg_i = find_hash_node(&node_hash_table, current->negative_node);
-    //     printf("%d %d\n", pos_i, neg_i);
-
-    //     // Check if ground //
-    //     printf("%f\n", gsl_vector_get(gsl_b, neg_i-1));
-
-    // }
-
-    // If the component is a voltage source, take its index in the m2 part of the b vector
-    if (current->comp_type == 'v') {
-        sweep_node_i = nodes_n-1 +current->m2_i;
-    }
+    // If the component is a current source, find the index of both nodes in the hash table
 
     // Change the current value, adding the step in each iteration, then change the bvector
     // Then solve the linear system in each iteration, in function solve_dc_sweep_system
 
-    cur_value = low;
-    do {
-        gsl_vector_set(temp_gsl_b, sweep_node_i, cur_value);  
-        solve_dc_sweep_system(temp_gsl_b, sweep_node_i); 
-        cur_value = cur_value + step;
-    } while (cur_value <= high);
+    // Only change the b vector if the node is not ground
+
+    if (current->comp_type == 'i') {
+        pos_sweep_node_i = find_hash_node(&node_hash_table, current->positive_node) - 1; // -1 because 0 is ground
+        neg_sweep_node_i = find_hash_node(&node_hash_table, current->negative_node) - 1;
+
+        cur_value = low;
+        do {
+            if (pos_sweep_node_i != -1) {
+                gsl_vector_set(temp_gsl_b, pos_sweep_node_i, -cur_value);
+            }
+            if (neg_sweep_node_i != -1) {
+                gsl_vector_set(temp_gsl_b, neg_sweep_node_i, cur_value);
+            }
+
+            solve_dc_sweep_system(temp_gsl_b, cur_value, 'i'); 
+            cur_value = cur_value + step;
+        } while (cur_value <= high);
+
+    }
+
+    // If the component is a voltage source, take its index in the m2 part of the b vector
+
+    // Change the current value, adding the step in each iteration, then change the bvector
+    // Then solve the linear system in each iteration, in function solve_dc_sweep_system
+
+    if (current->comp_type == 'v') {
+        sweep_node_i = nodes_n-1 +current->m2_i;
+
+        cur_value = low;
+        do {
+            gsl_vector_set(temp_gsl_b, sweep_node_i, cur_value); 
+
+            solve_dc_sweep_system(temp_gsl_b, cur_value, 'v'); 
+            cur_value = cur_value + step;
+        } while (cur_value <= high);
+    }
 
 
 }
@@ -224,7 +242,7 @@ void dc_sweep() {
 // This function solves the linear system with the altered b vector
 // Then prints the value of each plot node in a separate file, that corresponds to each different value of the sweep component
 
-void solve_dc_sweep_system(gsl_vector *temp_gsl_b, int sweep_node_i) {
+void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value, char type) {
 
     gsl_vector *temp_gsl_x = gsl_vector_alloc(A_dim);
 
@@ -245,15 +263,21 @@ void solve_dc_sweep_system(gsl_vector *temp_gsl_b, int sweep_node_i) {
     // Get the values that will be printed to the files, then call add_to_plot_file
     for (i = 0; i < plot_node_count; i++) {
         plot_node_i = plot_node_indexes[i];
-        b_vector_value = gsl_vector_get(temp_gsl_b, sweep_node_i);
+        b_vector_value = cur_value;
         x_vector_value = gsl_vector_get(temp_gsl_x, plot_node_i);
+
         add_to_plot_file(b_vector_value, x_vector_value, i);
 
     }
 
 }
 
+void solve_dc_sweep_system_i(gsl_vector *temp_gsl_b, int pos_sweep_node_i, int neg_sweep_node_i) {
+
+}
+
 // Adds the node to be plotted to a list of all the nodes to be plotted
+// IMPORTANT: These indexes start at 0.
 void add_plot_node(int node_i) {
 
     if (plot_node_indexes== NULL) {

@@ -16,6 +16,7 @@ int m2 = 0;
 int m2_i = 0;
 int hash_table_size = 0;
 int lines = 0;
+int sweep_flag = 0;
 int solver_type = LU_SOL;
 double DC_arguments[3];
 
@@ -97,7 +98,7 @@ int parse_line(char* line) {
 
 
     // String 1: Type of circuit element & name
-    token = strtok(line, " \t");
+    token = strtok(line, " \t\n\r");
 
     // If the first character is an asterisk, the line is a comment
     if (token[0] == '*'){
@@ -107,72 +108,13 @@ int parse_line(char* line) {
     // Spice command
     if (token[0] == '.') {
 
-        // Checking for .OPTIONS SPD
-        if (strcmp(str_tolower(token), ".options") == 0) { 
+        int parse_result =  parse_spice_command(token);
 
-            token = strtok(NULL, " \t");
-            if (token == NULL) {
-                return PARSING_ERROR;
-            }   
-
-            if (strncmp(token, "SPD", strlen("SPD")) == 0) { // Raises the flag for the Cholesky solver
-                solver_type = CHOL_SOL;
-            }
+        if (parse_result == PARSING_ERROR) {
+            return PARSING_ERROR;
         }
 
-        // DC Sweep
-        else if (strcmp(str_tolower(token), ".dc") == 0) {
-
-            token = strtok(NULL, " \t");
-            if (token == NULL) {
-                return PARSING_ERROR;
-            }
-
-            // The component must be a voltage or current source
-            int comp_exists = find_component(str_tolower(token));
-
-            if (comp_exists == NOT_FOUND) {
-                printf("Error! .DC Argument is not an existing component.\n");
-                return PARSING_ERROR;
-            }
-
-            else if (comp_exists == NOT_V_OR_I) {
-                printf("Error! .DC argument is not a voltage or current source.\n");
-                return PARSING_ERROR;
-            }
-
-            // If the component name is valid, the next 3 arguments must be numbers.
-            for (int i = 0; i < 3; i++) {
-                token = strtok(NULL, " \t");
-                if (token == NULL) {
-                    return PARSING_ERROR;
-                } 
-                else {
-                    DC_arguments[i] = atof(token);
-                }
-            }
-        }
-
-        // A .DC command must be followed by a .plot or .print command
-        else if ((strcmp(str_tolower(token), ".plot") == 0) || (strcmp(str_tolower(token), ".print") == 0)) {
-
-            token = strtok(NULL, " \t\n\r");
-            if (token == NULL) {
-                return PARSING_ERROR;
-            }
-
-            // The plot argument is parsed separately. 
-            int node_i = parse_plot_arg(token);
-            if (node_i == PARSING_ERROR) {
-                return PARSING_ERROR;
-            }
-
-            // If the plot node is valid, it is added to the list of nodes to be printed during DC sweep
-            add_plot_node(node_i);
-
-        }
-
-        return 1;
+        return PARSING_SUCCESSFUL;
     }
 
     if ((token == NULL) || (valid_comp_type(token[0]) == FALSE)) {
@@ -198,7 +140,7 @@ int parse_line(char* line) {
 
 
     // String 2: Positive node name
-    token = strtok(NULL, " \t");
+    token = strtok(NULL, " \t\n\r");
     if (token == NULL) {
         return PARSING_ERROR;
     }
@@ -222,7 +164,7 @@ int parse_line(char* line) {
     }  
 
     // String 3: Negative node name
-    token = strtok(NULL, " \t");
+    token = strtok(NULL, " \t\n\r");
     if (token == NULL) {
         return PARSING_ERROR;
     }
@@ -241,7 +183,7 @@ int parse_line(char* line) {
     } 
  
     // String 4: Numeric value
-    token = strtok(NULL, " \t");
+    token = strtok(NULL, " \t\r\n");
     if (token == NULL) {
         return PARSING_ERROR;
     }
@@ -338,6 +280,7 @@ int parse_plot_arg(char *token) {
 
     // Searches if the node exists, in the hash table
     node_i = find_hash_node(&node_hash_table, plot_node_str);
+
     if (node_i == NOT_FOUND) {
         printf("Error! The node does not exist.\n");
         return PARSING_ERROR;
@@ -345,6 +288,103 @@ int parse_plot_arg(char *token) {
 
     return node_i;
 
+}
+
+// This function parses all spice commands (ending with .)
+int parse_spice_command(char* token)
+{
+
+    int parsing_result;
+    // .options //
+    if (strcmp(str_tolower(token), ".options") == 0)
+    {
+        parsing_result = option_command(token);
+    }
+
+    // .dc //
+    else if (strcmp(str_tolower(token), ".dc") == 0)
+    {
+        parsing_result = dc_command(token);
+    }
+
+    // .plot or .print //
+    else if ((strcmp(str_tolower(token), ".plot") == 0) || (strcmp(str_tolower(token), ".print") == 0))
+    {
+        parsing_result = plot_command(token);
+    }
+
+    return parsing_result; //SUCCESSFUL or ERROR
+}
+
+
+int option_command(char* token) {
+
+    token = strtok(NULL, " \t\n\r");
+    if(token == NULL) {
+        return PARSING_ERROR;
+    }
+
+    if (strcmp(str_tolower(token), "spd") == 0) {
+        solver_type = CHOL_SOL;
+    }
+
+    return PARSING_SUCCESSFUL;
+}
+
+int dc_command(char* token){
+
+    token = strtok(NULL, " \t\n\r");
+    if (token == NULL)
+    {
+        return PARSING_ERROR;
+    }
+
+    int comp_exists = find_component(str_tolower(token));
+
+    if (comp_exists == NOT_FOUND)
+    {
+        printf("Error! .DC Argument is not an existing component.\n");
+        return PARSING_ERROR;
+    }
+    else if (comp_exists == NOT_V_OR_I)
+    {
+        printf("Error! .DC argument is not a voltage or current source.\n");
+        return PARSING_ERROR;
+    }
+
+    for (int i = 0; i < 3; i++)
+    {
+        token = strtok(NULL, " \t\r\n");
+        if (token == NULL)
+        {
+            return PARSING_ERROR;
+        }
+        else
+        {
+            DC_arguments[i] = atof(token);
+        }
+    }
+    sweep_flag = 1;
+    return PARSING_SUCCESSFUL;
+}
+
+int plot_command(char* token) {
+
+    token = strtok(NULL, " \t\n\r");
+    if (token == NULL)
+    {
+        return PARSING_ERROR;
+    }
+
+    int node_i = parse_plot_arg(token);
+    if (node_i == PARSING_ERROR)
+    {
+        return PARSING_ERROR;
+    }
+
+    add_plot_node(node_i-1);
+
+    return PARSING_SUCCESSFUL;
 }
 
 

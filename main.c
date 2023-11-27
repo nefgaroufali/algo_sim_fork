@@ -41,7 +41,9 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    //dc_sweep();
+    if (sweep_flag == TRUE) {
+        dc_sweep();
+    }
 
     // Close all open files before exiting the program
     for (int i = 0; i < 5; i++) {
