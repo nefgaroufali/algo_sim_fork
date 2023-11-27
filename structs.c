@@ -12,6 +12,10 @@ component *sweep_component = NULL;
 int index_counter = 1;
 hash_table node_hash_table;
 
+char** node_array;
+int node_array_index_counter = 0;
+char** m2_array;
+
 
 // ------- Component Structure ------ //
 
@@ -233,4 +237,73 @@ void free_hash_table(hash_table *ht) {
 
     // Free the table itself
     free(ht->table);
+}
+
+
+// This function adds a node to the node array
+void add_node_array(char* node_name)
+{
+    if(strcmp(node_name,"0")==0){
+        return;
+    }
+
+    // if it is the first time of adding a node, allocate the array, and add the ground to position 0
+    if (node_array == NULL)
+    {
+        node_array = (char**) malloc(sizeof(char*)*2);
+        node_array[0] = (char*) malloc(strlen(node_name) + 1);
+        node_array[1] = (char*) malloc(strlen(node_name) + 1);
+
+        // put in the node_array[0] the string "0"
+        strcpy(node_array[0], "0");
+        strcpy(node_array[1], node_name);
+        node_array_index_counter = 2;
+        return;
+    }
+    else
+    {
+        // realloc the array and add the new node
+        node_array = (char**) realloc(node_array, sizeof(char*) * (node_array_index_counter + 1));
+        node_array[node_array_index_counter] = (char*) malloc(strlen(node_name) + 1);
+        strcpy(node_array[node_array_index_counter], node_name);
+        node_array_index_counter++;
+    }
+}
+
+// This function prints the node array
+void print_node_array()
+{
+    for (int i = 0; i < node_array_index_counter; i++)
+    {
+        printf("\nThe name of the node with index %d is %s\n", i, node_array[i]);
+    }
+}
+
+// This function is an array of all V or L elements
+void add_m2_array(char* comp_name)
+{
+
+    // Allocate the array the first time
+    if(m2_array == NULL)
+    {
+        m2_array = (char**) malloc(sizeof(char*)*(m2_i + 1));
+        m2_array[m2_i] = (char*) malloc(strlen(comp_name) + 1);
+        strcpy(m2_array[m2_i], comp_name);
+        return;
+    }
+    else
+    {
+        m2_array = (char**) realloc(m2_array, sizeof(char*) * (m2_i + 1));
+        m2_array[m2_i] = (char*) malloc(strlen(comp_name) + 1);
+        strcpy(m2_array[m2_i], comp_name);
+    }
+}
+
+// This function prints the m2 array
+void print_m2_array()
+{
+    for (int i = 0; i < m2_i; i++)
+    {
+        printf("\nThe name of the component with index %d is %s\n", i, m2_array[i]);
+    }
 }

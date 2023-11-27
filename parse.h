@@ -14,11 +14,10 @@
 extern char valid_comp_list[16];
 extern int nodes_n; // circuit nodes INCLUDING ground
 extern int m2;      // circuit branches that correspond to voltage sources or inductors
-extern int m2_i;
-extern int lines;
-extern int solver_type;
-
-extern double DC_arguments[3];
+extern int m2_i;    // Index for circuit branches of type V or L
+extern int lines;   // The number of lines in the input file
+extern int solver_type; // The type of solver (LU or Chol)
+extern double DC_arguments[3];  // The three arguments to .dc: Low, High, Step
 
 void number_of_lines(char *file_name);
 void parse(char *file_name);

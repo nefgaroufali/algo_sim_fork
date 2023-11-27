@@ -1,3 +1,14 @@
 
 1) Save operating points to different files, according to file name
 2) Leaks
+3) IMprove parsing function visually
+
+Algorithm for DC sweep:
+
+Check if it is i or v
+If it is i:
+                we have the component pointer in the list. we find the poisitive and negative node indexes, we find their node indexes in the hashtable
+                and we changetthe respective element in b
+
+Ifit is v:
+                We have the component pointer. We get the m2_i index and we add nodes - 1. This is the respective elementin the b vector

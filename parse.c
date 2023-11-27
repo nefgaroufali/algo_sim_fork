@@ -6,6 +6,8 @@
 #include "structs.h"
 #include "direct_sol.h"
 
+// The valid component types //
+
 char valid_comp_list[16] = {'V', 'I', 'R', 'C', 'L', 'D', 'M', 'Q', 
                            'v', 'i', 'r', 'c', 'l', 'd', 'm', 'q'};
 
@@ -42,14 +44,15 @@ void number_of_lines(char* file_name){
     return;
 }
 
+// This function parses the input spice file
 void parse(char* file_name) {
 
     FILE *input_file;
     char line[LINE_MAX];
     int parse_line_result;
 
-    // Find the number of lines in the file
-    // to alloc the hashtable
+    // Find the number of lines in the file to allocate the hashtable
+
     number_of_lines(file_name);
     create_hash_table(lines/2);
 
@@ -104,7 +107,8 @@ int parse_line(char* line) {
     // Spice command
     if (token[0] == '.') {
 
-        if (strcmp(token, ".OPTIONS") == 0) {   // Checking for .OPTIONS SPD
+        // Checking for .OPTIONS SPD
+        if (strcmp(str_tolower(token), ".options") == 0) { 
 
             token = strtok(NULL, " \t");
             if (token == NULL) {
@@ -115,7 +119,9 @@ int parse_line(char* line) {
                 solver_type = CHOL_SOL;
             }
         }
-        else if (strcmp(token, ".DC") == 0) {   // DC Sweep
+
+        // DC Sweep
+        else if (strcmp(str_tolower(token), ".dc") == 0) {
 
             token = strtok(NULL, " \t");
             if (token == NULL) {
@@ -140,23 +146,29 @@ int parse_line(char* line) {
                 token = strtok(NULL, " \t");
                 if (token == NULL) {
                     return PARSING_ERROR;
-                }
+                } 
                 else {
                     DC_arguments[i] = atof(token);
                 }
             }
         }
+
+        // A .DC command must be followed by a .plot or .print command
         else if ((strcmp(str_tolower(token), ".plot") == 0) || (strcmp(str_tolower(token), ".print") == 0)) {
 
-            token = strtok(NULL, " \t\n");
+            token = strtok(NULL, " \t\n\r");
             if (token == NULL) {
                 return PARSING_ERROR;
             }
-            if (parse_plot_arg(token) == PARSING_ERROR) {
+
+            // The plot argument is parsed separately. 
+            int node_i = parse_plot_arg(token);
+            if (node_i == PARSING_ERROR) {
                 return PARSING_ERROR;
             }
 
-
+            // If the plot node is valid, it is added to the list of nodes to be printed during DC sweep
+            add_plot_node(node_i);
 
         }
 
@@ -168,18 +180,22 @@ int parse_line(char* line) {
     }
 
     // Store the component type and name in lowercase
-
     comp_type = tolower(token[0]);
+    comp_name = str_tolower(token);
+
+    // If the component is V or L, we must add it to the list of m2 components, and increment the m2 counter
+    // An index number is assigned for the respective component struct field
 
     if ((check_for_V_or_L(comp_type)) == TRUE) {
         m2_i = m2;
+        add_m2_array(comp_name);
         m2++;
     }
     else {
-        m2_i = -1;
+        m2_i = -1;  // If it is not V or L, it has no m2 index
     }
 
-    comp_name = str_tolower(token);
+
 
     // String 2: Positive node name
     token = strtok(NULL, " \t");
@@ -195,6 +211,13 @@ int parse_line(char* line) {
 
     if (node_found == NOT_FOUND) {
         insert_node(&node_hash_table, str_tolower(positive_node));
+
+        // If the node is not found, we also add it to the node array
+        // The node array is something like a reverse hash table
+        // It contains all the nodes in parsing order.
+
+        add_node_array(str_tolower(positive_node));
+
         nodes_n++;
     }  
 
@@ -212,6 +235,8 @@ int parse_line(char* line) {
 
     if (node_found == NOT_FOUND) {
         insert_node(&node_hash_table, str_tolower(negative_node));
+                add_node_array(str_tolower(negative_node));
+
         nodes_n++;
     } 
  
@@ -286,10 +311,15 @@ int check_for_V_or_L(char comp_type) {
 
 }
 
-// This function checks if the arguments for .PLOT or .PRINT are valid
+// This function checks if the arguments for .PLOT or .PRINT are valid. 
+// It returns the node index of the node, if it is valid.
 
 int parse_plot_arg(char *token) {
     
+    int node_i;
+
+    // The argument must be v(<node>) or i(<node)
+
     if ((tolower(token[0]) != 'v') && (tolower(token[0] != 'i'))) {
         return PARSING_ERROR;
     }
@@ -306,14 +336,14 @@ int parse_plot_arg(char *token) {
     char *plot_node_str = (char *) malloc(sizeof(char) * (token_len - 3)); // -2 for the parentheses and -1 for v or i
     strncpy(plot_node_str, token + 2, token_len-3);
 
-    if (find_hash_node(&node_hash_table, plot_node_str) == NOT_FOUND) {
+    // Searches if the node exists, in the hash table
+    node_i = find_hash_node(&node_hash_table, plot_node_str);
+    if (node_i == NOT_FOUND) {
         printf("Error! The node does not exist.\n");
         return PARSING_ERROR;
     }
 
-    printf("String is %s\n", plot_node_str);
-
-    return 1;
+    return node_i;
 
 }
 
