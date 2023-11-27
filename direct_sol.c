@@ -272,10 +272,6 @@ void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value, char type) 
 
 }
 
-void solve_dc_sweep_system_i(gsl_vector *temp_gsl_b, int pos_sweep_node_i, int neg_sweep_node_i) {
-
-}
-
 // Adds the node to be plotted to a list of all the nodes to be plotted
 // IMPORTANT: These indexes start at 0.
 void add_plot_node(int node_i) {
