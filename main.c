@@ -20,12 +20,10 @@ int main(int argc, char* argv[]) {
     strcpy(file_name, argv[1]);
     parse(file_name);
 
-    printf("DC Parameters: %f %f %f\n", DC_arguments[0], DC_arguments[1], DC_arguments[2]);
+    // printf("DC Parameters: %f %f %f\n", DC_arguments[0], DC_arguments[1], DC_arguments[2]);
 
-    print_hash_table(&node_hash_table);
-    print_comp_list(head);
-
-    printf("NUmber of nodes (INCLUDING ground) is %d and number of V or L branches is %d\n", nodes_n, m2);
+    // print_hash_table(&node_hash_table);
+    // print_comp_list(head);
 
     create_equations();
 
@@ -43,7 +41,19 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    //dc_sweep();
+    if (sweep_flag == TRUE) {
+        dc_sweep();
+    }
+
+     // Close all open files before exiting the program
+    for (int i = 0; i < 5; i++) {
+        if (filePointers[i] != NULL) {
+            
+            system("gnuplot plot_script1.gp");
+
+            fclose(filePointers[i]);
+        }
+    }
 
     free_gsl();
 
@@ -51,7 +61,11 @@ int main(int argc, char* argv[]) {
     free_comp_list(head);
     free_A_array();
     free_b_array();
-    print_node_array();
+    free_node_array();
+    free_m2_array();
+    free_plot_node();
+
+   
     
     return 0;
 

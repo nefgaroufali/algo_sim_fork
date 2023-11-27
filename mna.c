@@ -256,7 +256,7 @@ void create_equations(){
     alloc_A_array();
     alloc_b_array();
     create_arrays();
-    print_arrays();
+    //print_arrays();
 
     return;
 }

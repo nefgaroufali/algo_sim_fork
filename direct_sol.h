@@ -17,7 +17,12 @@ extern gsl_vector* gsl_b;
 extern gsl_vector* gsl_x;
 extern gsl_permutation *gsl_p;
 
-extern int spd;
+extern int spd; // Flag that indicates if the system is SPD Or not (if Cholesky failed)
+
+extern int *plot_node_indexes;
+extern int plot_node_count;
+
+extern FILE *filePointers[5]; 
 
 
 void form_gsl_system();
@@ -28,7 +33,12 @@ void form_LU();
 void form_chol();
 void solve_dc_system(int solver_type);
 void dc_sweep();
+void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value, char type);
+void add_to_plot_file(double b_vector_value, double x_vector_value, int i);
 
 void gslErrorHandler(const char *reason, const char *file, int line, int gsl_errno);
+
+void add_plot_node(int node_i);
+void free_plot_node();
 
 #endif
