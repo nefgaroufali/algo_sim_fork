@@ -6,6 +6,8 @@
 #include "structs.h"
 #include "direct_sol.h"
 
+// The valid component types //
+
 char valid_comp_list[16] = {'V', 'I', 'R', 'C', 'L', 'D', 'M', 'Q', 
                            'v', 'i', 'r', 'c', 'l', 'd', 'm', 'q'};
 
@@ -16,7 +18,6 @@ int hash_table_size = 0;
 int lines = 0;
 int solver_type = LU_SOL;
 double DC_arguments[3];
-
 
 // This function counts the lines of the file //
 void number_of_lines(char* file_name){
@@ -43,14 +44,15 @@ void number_of_lines(char* file_name){
     return;
 }
 
+// This function parses the input spice file
 void parse(char* file_name) {
 
     FILE *input_file;
     char line[LINE_MAX];
     int parse_line_result;
 
-    // Find the number of lines in the file
-    // to alloc the hashtable
+    // Find the number of lines in the file to allocate the hashtable
+
     number_of_lines(file_name);
     create_hash_table(lines/2);
 
@@ -105,60 +107,12 @@ int parse_line(char* line) {
     // Spice command
     if (token[0] == '.') {
 
-        if (strcmp(token, ".OPTIONS") == 0) {   // Checking for .OPTIONS SPD
+        parse_spice_command(token);
 
-            token = strtok(NULL, " \t");
-            if (token == NULL) {
-                return PARSING_ERROR;
-            }   
-
-            if (strncmp(token, "SPD", strlen("SPD")) == 0) { // Raises the flag for the Cholesky solver
-                solver_type = CHOL_SOL;
-            }
+        if (parse_spice_command(token) == PARSING_ERROR) {
+            return PARSING_ERROR;
         }
-        else if (strcmp(token, ".DC") == 0) {   // DC Sweep
-
-            token = strtok(NULL, " \t");
-            if (token == NULL) {
-                return PARSING_ERROR;
-            }
-
-            // The component must be a voltage or current source
-            int comp_exists = find_component(str_tolower(token));
-
-            if (comp_exists == NOT_FOUND) {
-                printf("Error! .DC Argument is not an existing component.\n");
-                return PARSING_ERROR;
-            }
-
-            else if (comp_exists == NOT_V_OR_I) {
-                printf("Error! .DC argument is not a voltage or current source.\n");
-                return PARSING_ERROR;
-            }
-
-            // If the component name is valid, the next 3 arguments must be numbers.
-            for (int i = 0; i < 3; i++) {
-                token = strtok(NULL, " \t");
-                if (token == NULL) {
-                    return PARSING_ERROR;
-                }
-                else {
-                    DC_arguments[i] = atof(token);
-                }
-            }
-        }
-        else if ((strcmp(str_tolower(token), ".plot") == 0) || (strcmp(str_tolower(token), ".print") == 0)) {
-
-            token = strtok(NULL, " \t\n");
-            if (token == NULL) {
-                return PARSING_ERROR;
-            }
-            if (parse_plot_arg(token) == PARSING_ERROR) {
-                return PARSING_ERROR;
-            }
-
-        }
-
+        
         return 1;
     }
 
@@ -167,10 +121,11 @@ int parse_line(char* line) {
     }
 
     // Store the component type and name in lowercase
-
     comp_type = tolower(token[0]);
-
     comp_name = str_tolower(token);
+
+    // If the component is V or L, we must add it to the list of m2 components, and increment the m2 counter
+    // An index number is assigned for the respective component struct field
 
     if ((check_for_V_or_L(comp_type)) == TRUE) {
         m2_i = m2;
@@ -178,8 +133,10 @@ int parse_line(char* line) {
         m2++;
     }
     else {
-        m2_i = -1;
+        m2_i = -1;  // If it is not V or L, it has no m2 index
     }
+
+
 
     // String 2: Positive node name
     token = strtok(NULL, " \t");
@@ -195,7 +152,13 @@ int parse_line(char* line) {
 
     if (node_found == NOT_FOUND) {
         insert_node(&node_hash_table, str_tolower(positive_node));
+
+        // If the node is not found, we also add it to the node array
+        // The node array is something like a reverse hash table
+        // It contains all the nodes in parsing order.
+
         add_node_array(str_tolower(positive_node));
+
         nodes_n++;
     }  
 
@@ -213,7 +176,8 @@ int parse_line(char* line) {
 
     if (node_found == NOT_FOUND) {
         insert_node(&node_hash_table, str_tolower(negative_node));
-        add_node_array(str_tolower(negative_node));
+                add_node_array(str_tolower(negative_node));
+
         nodes_n++;
     } 
  
@@ -288,10 +252,15 @@ int check_for_V_or_L(char comp_type) {
 
 }
 
-// This function checks if the arguments for .PLOT or .PRINT are valid
+// This function checks if the arguments for .PLOT or .PRINT are valid. 
+// It returns the node index of the node, if it is valid.
 
 int parse_plot_arg(char *token) {
     
+    int node_i;
+
+    // The argument must be v(<node>) or i(<node)
+
     if ((tolower(token[0]) != 'v') && (tolower(token[0] != 'i'))) {
         return PARSING_ERROR;
     }
@@ -308,17 +277,105 @@ int parse_plot_arg(char *token) {
     char *plot_node_str = (char *) malloc(sizeof(char) * (token_len - 3)); // -2 for the parentheses and -1 for v or i
     strncpy(plot_node_str, token + 2, token_len-3);
 
-    if (find_hash_node(&node_hash_table, plot_node_str) == NOT_FOUND) {
+    // Searches if the node exists, in the hash table
+    node_i = find_hash_node(&node_hash_table, plot_node_str);
+    if (node_i == NOT_FOUND) {
         printf("Error! The node does not exist.\n");
         return PARSING_ERROR;
     }
 
-    printf("String is %s\n", plot_node_str);
-
-    return 1;
+    return node_i;
 
 }
 
+int parse_spice_command(char* token)
+{
+    // .options //
+    if (strcmp(str_tolower(token), ".options") == 0)
+    {
+        option_command(token);
+    }
+
+    // .dc //
+    else if (strcmp(str_tolower(token), ".dc") == 0)
+    {
+        dc_command(token);
+    }
+
+    // .plot or .print //
+    else if ((strcmp(str_tolower(token), ".plot") == 0) || (strcmp(str_tolower(token), ".print") == 0))
+    {
+        plot_command(token);
+    }
+    return PARSING_SUCCESSFUL;
+}
 
 
+int option_command(char* token) {
 
+    token = strtok(NULL, " \t");
+    if(token == NULL) {
+        return PARSING_ERROR;
+    }
+
+    if (strcmp(str_tolower(token), "SPD") == 0) {
+        solver_type = CHOL_SOL;
+    }
+
+    return PARSING_SUCCESSFUL;
+}
+
+int dc_command(char* token){
+
+    token = strtok(NULL, " \t");
+    if (token == NULL)
+    {
+        return PARSING_ERROR;
+    }
+
+    int comp_exists = find_component(str_tolower(token));
+
+    if (comp_exists == NOT_FOUND)
+    {
+        printf("Error! .DC Argument is not an existing component.\n");
+        return PARSING_ERROR;
+    }
+    else if (comp_exists == NOT_V_OR_I)
+    {
+        printf("Error! .DC argument is not a voltage or current source.\n");
+        return PARSING_ERROR;
+    }
+
+    for (int i = 0; i < 3; i++)
+    {
+        token = strtok(NULL, " \t");
+        if (token == NULL)
+        {
+            return PARSING_ERROR;
+        }
+        else
+        {
+            DC_arguments[i] = atof(token);
+        }
+    }
+    return PARSING_SUCCESSFUL;
+}
+
+int plot_command(char* token) {
+
+    token = strtok(NULL, " \t\n\r");
+    if (token == NULL)
+    {
+        return PARSING_ERROR;
+    }
+
+    int node_i = parse_plot_arg(token);
+    if (node_i == PARSING_ERROR)
+    {
+        return PARSING_ERROR;
+    }
+
+    add_plot_node(node_i);
+
+    return PARSING_SUCCESSFUL;
+}

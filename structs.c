@@ -11,6 +11,7 @@ component *sweep_component = NULL;
 
 int index_counter = 1;
 hash_table node_hash_table;
+
 char** node_array;
 int node_array_index_counter = 0;
 char** m2_array;
@@ -238,18 +239,21 @@ void free_hash_table(hash_table *ht) {
     free(ht->table);
 }
 
+
+// This function adds a node to the node array
 void add_node_array(char* node_name)
 {
-    // if it is the first time of adding a node allocate the array
+    if(strcmp(node_name,"0")==0){
+        return;
+    }
+
+    // if it is the first time of adding a node, allocate the array, and add the ground to position 0
     if (node_array == NULL)
     {
-        if(strcmp(node_name,"0")==0){
-            return;
-        }
-
         node_array = (char**) malloc(sizeof(char*)*2);
         node_array[0] = (char*) malloc(strlen(node_name) + 1);
         node_array[1] = (char*) malloc(strlen(node_name) + 1);
+
         // put in the node_array[0] the string "0"
         strcpy(node_array[0], "0");
         strcpy(node_array[1], node_name);
@@ -258,10 +262,6 @@ void add_node_array(char* node_name)
     }
     else
     {
-        if(strcmp(node_name,"0")==0){
-            return;
-        }
-
         // realloc the array and add the new node
         node_array = (char**) realloc(node_array, sizeof(char*) * (node_array_index_counter + 1));
         node_array[node_array_index_counter] = (char*) malloc(strlen(node_name) + 1);
@@ -270,6 +270,7 @@ void add_node_array(char* node_name)
     }
 }
 
+// This function prints the node array
 void print_node_array()
 {
     for (int i = 0; i < node_array_index_counter; i++)
@@ -278,8 +279,11 @@ void print_node_array()
     }
 }
 
+// This function is an array of all V or L elements
 void add_m2_array(char* comp_name)
 {
+
+    // Allocate the array the first time
     if(m2_array == NULL)
     {
         m2_array = (char**) malloc(sizeof(char*)*(m2_i + 1));
@@ -295,6 +299,7 @@ void add_m2_array(char* comp_name)
     }
 }
 
+// This function prints the m2 array
 void print_m2_array()
 {
     for (int i = 0; i < m2_i; i++)
