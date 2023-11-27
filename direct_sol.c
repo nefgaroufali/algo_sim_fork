@@ -304,13 +304,12 @@ void add_to_plot_file(double b_vector_value, double x_vector_value, int i) {
 
     // Check if the file corresponding to i is already open
     if (filePointers[i] == NULL) {
-
         char filename[20];
         snprintf(filename, sizeof(filename), "file_%d.txt", i);
-        
+
         // Open the file in write mode
         filePointers[i] = fopen(filename, "w");
-        
+
         // Check if the file is opened successfully
         if (filePointers[i] == NULL) {
             printf("Error opening file %d\n", i);
@@ -323,6 +322,28 @@ void add_to_plot_file(double b_vector_value, double x_vector_value, int i) {
 
     // Flush the file buffer to ensure data is written immediately
     fflush(filePointers[i]);
+
+    // Code to generate the GNU Plot command to create the plot
+    char plot_command[100];
+    snprintf(plot_command, sizeof(plot_command), "set terminal png; set output 'file_%d.png'; plot 'file_%d.txt' with lines", i, i);
+
+    // Generate a temporary script file to run the GNU Plot commands
+    FILE *gnuplotScript = fopen("plot_script.gnu", "w");
+    if (gnuplotScript == NULL) {
+        printf("Error creating GNU Plot script file\n");
+        return;
+    }
+
+    // Write the GNU Plot command to the script file
+    fprintf(gnuplotScript, "%s", plot_command);
+    fclose(gnuplotScript);
+    
+
+    // Execute GNU Plot using the script file
+    system("gnuplot plot_script.gnu");
+
+    // Clean up: remove the temporary script file
+    remove("plot_script.gnu");
 }
 
 // This function frees the memory occupied by the plot node indexes

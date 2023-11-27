@@ -45,13 +45,11 @@ int main(int argc, char* argv[]) {
         dc_sweep();
     }
 
-     // Close all open files before exiting the program
+    // Close all open files before exiting the program
     for (int i = 0; i < 5; i++) {
         if (filePointers[i] != NULL) {
-            
-            system("gnuplot plot_script1.gp");
-
             fclose(filePointers[i]);
+            filePointers[i] = NULL;
         }
     }
 
@@ -63,9 +61,7 @@ int main(int argc, char* argv[]) {
     free_b_array();
     free_node_array();
     free_m2_array();
-    free_plot_node();
-
-   
+    free_plot_node();   
     
     return 0;
 
