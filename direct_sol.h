@@ -39,9 +39,6 @@ void add_to_plot_file(double b_vector_value, double x_vector_value, int i);
 void gslErrorHandler(const char *reason, const char *file, int line, int gsl_errno);
 
 void add_plot_node(int node_i);
-<<<<<<< HEAD
-=======
 void free_plot_node();
->>>>>>> upstream/main
 
 #endif

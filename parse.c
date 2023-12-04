@@ -275,13 +275,8 @@ int parse_plot_arg(char *token) {
         return PARSING_ERROR;
     }
 
-<<<<<<< HEAD
-    char *plot_node_str = (char *) malloc(sizeof(char) * (token_len - 3)); // -2 for the parentheses and -1 for v or i
-    strncpy(plot_node_str, token + 2, token_len-3);
-=======
     char *plot_node_str = (char *) malloc(sizeof(char) * (token_len - 3) + 1); // -2 for the parentheses and -1 for v or i and +1 for \0
     strncpy(plot_node_str, token + 2, token_len-3); 
->>>>>>> upstream/main
 
     // Searches if the node exists, in the hash table
     node_i = find_hash_node(&node_hash_table, plot_node_str);
@@ -291,11 +286,8 @@ int parse_plot_arg(char *token) {
         return PARSING_ERROR;
     }
 
-<<<<<<< HEAD
-=======
     free(plot_node_str);
 
->>>>>>> upstream/main
     return node_i;
 
 }

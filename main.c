@@ -48,15 +48,8 @@ int main(int argc, char* argv[]) {
     // Close all open files before exiting the program
     for (int i = 0; i < 5; i++) {
         if (filePointers[i] != NULL) {
-<<<<<<< HEAD
-            
-            system("gnuplot plot_script1.gp");
-
-            fclose(filePointers[i]);
-=======
             fclose(filePointers[i]);
             filePointers[i] = NULL;
->>>>>>> upstream/main
         }
     }
 
