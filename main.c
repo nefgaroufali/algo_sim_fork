@@ -48,10 +48,15 @@ int main(int argc, char* argv[]) {
     // Close all open files before exiting the program
     for (int i = 0; i < 5; i++) {
         if (filePointers[i] != NULL) {
+<<<<<<< HEAD
             
             system("gnuplot plot_script1.gp");
 
             fclose(filePointers[i]);
+=======
+            fclose(filePointers[i]);
+            filePointers[i] = NULL;
+>>>>>>> upstream/main
         }
     }
 
@@ -61,6 +66,9 @@ int main(int argc, char* argv[]) {
     free_comp_list(head);
     free_A_array();
     free_b_array();
+    free_node_array();
+    free_m2_array();
+    free_plot_node();   
     
     return 0;
 

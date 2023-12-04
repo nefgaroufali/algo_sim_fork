@@ -306,4 +306,27 @@ void print_m2_array()
     {
         printf("\nThe name of the component with index %d is %s\n", i, m2_array[i]);
     }
+<<<<<<< HEAD
+=======
+}
+
+// free the node array
+void free_node_array()
+{
+    for (int i = 0; i < node_array_index_counter; i++)
+    {
+        free(node_array[i]);
+    }
+    free(node_array);
+}
+
+// free the m2 array
+void free_m2_array()
+{
+    for (int i = 0; i < m2; i++)
+    {
+        free(m2_array[i]);
+    }
+    free(m2_array);
+>>>>>>> upstream/main
 }

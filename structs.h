@@ -55,6 +55,11 @@ void add_node_array(char* node_name);
 void print_node_array();
 void add_m2_array(char* comp_name);
 void print_m2_array();
+<<<<<<< HEAD
+=======
+void free_node_array();
+void free_m2_array();
+>>>>>>> upstream/main
 
 void print_hash_table(hash_table *ht);
 void free_hash_table(hash_table *ht);
