@@ -11,19 +11,17 @@
 
 // Algorithm for the CG algorithm, which is used to solve SPD systems iteratively
 
-void solve_cg(gsl_vector* cur_gsl_b) {
+void solve_cg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
 
     int max_iter = A_dim;   // A_dim = n
-
-    gsl_x = gsl_vector_calloc(A_dim);   // initialization to zero. Potentially change in the future for dcsweep
-
+    
     gsl_vector *gsl_r = gsl_vector_alloc(A_dim);    // residual vector
     gsl_vector *gsl_Ax = gsl_vector_alloc(A_dim);   // vector Ax
     gsl_vector *gsl_z = gsl_vector_alloc(A_dim);    // vector z
     gsl_vector *gsl_p = gsl_vector_alloc(A_dim);    // vector p
     gsl_vector *gsl_q = gsl_vector_alloc(A_dim);    // vector q
 
-    gsl_blas_dgemv(CblasNoTrans, 1.0, gsl_A, gsl_x, 0.0, gsl_Ax);   // Ax = A*x
+    gsl_blas_dgemv(CblasNoTrans, 1.0, gsl_A, cur_gsl_x, 0.0, gsl_Ax);   // Ax = A*x
 
     gsl_vector_memcpy(gsl_r, cur_gsl_b);
     gsl_vector_sub(gsl_r, gsl_Ax);      // r = b - Ax
@@ -63,9 +61,11 @@ void solve_cg(gsl_vector* cur_gsl_b) {
 
         alpha = rho/pq_dot; // alpha = rho/(dot(p,q))
 
-        gsl_vector_axpby(alpha, gsl_p, 1, gsl_x);    // x = x + alpha*p OR x = alpha*p + x
+        gsl_vector_axpby(alpha, gsl_p, 1, cur_gsl_x);    // x = x + alpha*p OR x = alpha*p + x
         gsl_vector_axpby(-alpha, gsl_q, 1, gsl_r);    // r = r - alpha*q OR r = -alpha*q + r
 
+        printf("Vector x is \n");
+        print_gsl_vector(cur_gsl_x, A_dim);
 
     }
 

@@ -110,7 +110,7 @@ void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value, char type) 
         gsl_linalg_cholesky_solve(gsl_chol, temp_gsl_b, temp_gsl_x);
     }
     else if (solver_type == CG_SOL) {
-        solve_cg(temp_gsl_b);
+        solve_cg(temp_gsl_b, temp_gsl_x);
     }
 
     int i;
@@ -290,7 +290,7 @@ void solve_dc_system(int solver_type) {
         gsl_linalg_cholesky_solve(gsl_chol, gsl_b, gsl_x);
     }
     else {
-        solve_cg(gsl_b);
+        solve_cg(gsl_b, gsl_x);
     }
 
     printf("Vector x:\n");
