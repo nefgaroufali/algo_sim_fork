@@ -11,9 +11,9 @@ INCLUDES = -I/home/makaragiannis/gsl/include
 LIBS = -L/home/makaragiannis/gsl/lib -lgsl -lgslcblas -lm
 
 # Source files
-SRC = main.c parse.c structs.c mna.c direct_sol.c
+SRC = main.c parse.c structs.c mna.c direct_sol.c iter_sol.c gsl.c
 
-# Object files
+# Object files (derived from source files)
 OBJ = $(SRC:.c=.o)
 
 # Executable name
