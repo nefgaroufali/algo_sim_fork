@@ -6,6 +6,7 @@
 #include "structs.h"
 #include "mna.h"
 #include "direct_sol.h"
+#include "gsl.h"
 
 int main(int argc, char* argv[]) {
 
@@ -30,14 +31,14 @@ int main(int argc, char* argv[]) {
     form_gsl_system();
 
 
-    if (solver_type == LU_SOL) {
+    if (solver_type == NON_SPD_SOL) {
         form_LU();
-        solve_dc_system(LU_SOL);
+        solve_dc_system(NON_SPD_SOL);
     }
-    else {  // if solver_type == CHOL_SOL
+    else {  // if solver_type == SPD_SOL
         form_chol();
         if (spd == TRUE) {
-            solve_dc_system(CHOL_SOL);
+            solve_dc_system(SPD_SOL);
         }
     }
 

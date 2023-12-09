@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include "parse.h"
 #include "structs.h"
+#include "gsl.h"
 #include "direct_sol.h"
 
 // The valid component types //
