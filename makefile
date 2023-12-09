@@ -14,7 +14,6 @@ LIBS = -L/home/makaragiannis/gsl/lib -lgsl -lgslcblas -lm
 SRC = main.c parse.c structs.c mna.c direct_sol.c
 
 # Object files
-OBJ = $(SRC:.c=.o)
 
 # Executable name
 EXEC = spice_sim
