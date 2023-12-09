@@ -20,6 +20,7 @@ int lines = 0;
 int sweep_flag = 0;
 int solver_type = LU_SOL;
 double DC_arguments[3];
+float itol = 1e-3;
 
 // This function counts the lines of the file //
 void number_of_lines(char* file_name){
@@ -322,14 +323,34 @@ int parse_spice_command(char* token)
 
 int option_command(char* token) {
 
-    token = strtok(NULL, " \t\n\r");
-    if(token == NULL) {
-        return PARSING_ERROR;
+    int spd_flag = 0;
+    int iter_flag = 0;
+
+    // Parsing of the OPTIONS command ends after the full command is parsed
+    while(1) {
+        token = strtok(NULL, " \t\n\r");
+        if(token == NULL) {
+            break;
+        }
+
+        else if (strcmp(str_tolower(token), "spd") == 0) {
+            spd_flag = 1;
+        }
+
+        else if (strcmp(str_tolower(token), "iter") == 0) {
+            iter_flag = 1;
+        }
+        else if (strncmp(str_tolower(token), "itol=", strlen("itol=")) == 0) {
+            itol = strtof(token + strlen("itol="), NULL);
+        }
     }
 
-    if (strcmp(str_tolower(token), "spd") == 0) {
-        solver_type = CHOL_SOL;
-    }
+    if      (spd_flag == 1 && iter_flag == 0) solver_type = CHOL_SOL;
+    else if (spd_flag == 0 && iter_flag == 1) solver_type = BICG_SOL;
+    else if (spd_flag == 1 && iter_flag == 1) solver_type = CG_SOL;
+    //Default:                                solver_type = LU_SOL 
+
+    printf("Solver type is %d and itol is %f. Iter flag is %d and spd flag is %d\n", solver_type, itol, spd_flag, iter_flag);
 
     return PARSING_SUCCESSFUL;
 }

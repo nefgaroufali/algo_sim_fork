@@ -8,15 +8,14 @@
 #define TRUE 1
 #define FALSE 0
 
-#define NON_SPD_SOL 0
-#define SPD_SOL 1
+#define LU_SOL 0
+#define CHOL_SOL 1
+#define BICG_SOL 2
+#define CG_SOL 3
 
 extern gsl_matrix* gsl_A;
-extern gsl_matrix* gsl_LU;
-extern gsl_matrix* gsl_chol;
 extern gsl_vector* gsl_b;
 extern gsl_vector* gsl_x;
-extern gsl_permutation *gsl_p;
 
 extern int spd; // Flag that indicates if the system is SPD Or not (if Cholesky failed)
 
@@ -38,5 +37,7 @@ void gslErrorHandler(const char *reason, const char *file, int line, int gsl_err
 void add_plot_node(int node_i);
 void free_plot_node();
 
+void solve_dc_system(int solver_type);
+void dc_sweep();
 
 #endif

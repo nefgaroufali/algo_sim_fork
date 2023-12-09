@@ -7,6 +7,7 @@
 #include "mna.h"
 #include "direct_sol.h"
 #include "gsl.h"
+#include "iter_sol.h"
 
 int main(int argc, char* argv[]) {
 
@@ -31,15 +32,18 @@ int main(int argc, char* argv[]) {
     form_gsl_system();
 
 
-    if (solver_type == NON_SPD_SOL) {
+    if (solver_type == LU_SOL) {
         form_LU();
-        solve_dc_system(NON_SPD_SOL);
+        solve_dc_system(LU_SOL);
     }
-    else {  // if solver_type == SPD_SOL
+    else if (solver_type == CHOL_SOL) {
         form_chol();
         if (spd == TRUE) {
-            solve_dc_system(SPD_SOL);
+            solve_dc_system(CHOL_SOL);
         }
+    }
+    else if (solver_type == CG_SOL) {
+        solve_dc_system(CG_SOL);
     }
 
     if (sweep_flag == TRUE) {
