@@ -17,7 +17,7 @@ c1 7 0 0.1
 c2 2 0 0.2
 l1 12 2 0.1
 
-*.OPTIONS SPD
+.OPTIONS ITER
 
 .dc v1 0 3 0.01
 .plot v(4)

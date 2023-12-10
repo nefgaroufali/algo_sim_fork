@@ -350,8 +350,6 @@ int option_command(char* token) {
     else if (spd_flag == 1 && iter_flag == 1) solver_type = CG_SOL;
     //Default:                                solver_type = LU_SOL 
 
-    printf("Solver type is %d and itol is %f. Iter flag is %d and spd flag is %d\n", solver_type, itol, spd_flag, iter_flag);
-
     return PARSING_SUCCESSFUL;
 }
 

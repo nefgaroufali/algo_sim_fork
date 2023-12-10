@@ -102,6 +102,7 @@ void gslErrorHandler(const char *reason, const char *file, int line, int gsl_err
 void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value, char type) {
 
     gsl_vector *temp_gsl_x = gsl_vector_alloc(A_dim);
+    gsl_vector_memcpy(temp_gsl_x, gsl_x);   // for the iterative methods
 
     if (solver_type == LU_SOL) {
         gsl_linalg_LU_solve(gsl_LU, gsl_p, temp_gsl_b, temp_gsl_x);
@@ -111,6 +112,9 @@ void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value, char type) 
     }
     else if (solver_type == CG_SOL) {
         solve_cg(temp_gsl_b, temp_gsl_x);
+    }
+    else if (solver_type == BICG_SOL) {
+        solve_bicg(temp_gsl_b, temp_gsl_x);
     }
 
     int i;
@@ -274,13 +278,13 @@ void dc_sweep() {
 
 }
 
-// This function solves the  DC system, with LU or Cholesky, depending on whether the user has specified SPD circuit
+// This function solves the  DC system, with LU or Cholesky or CG or BICG
 // Then writes the dc operating point in a .op file
 
 void solve_dc_system(int solver_type) {
 
     // Allocate the x vector
-    gsl_x = gsl_vector_alloc(A_dim);
+    gsl_x = gsl_vector_calloc(A_dim);   // fill it with zeros, useful for the iterative methods
 
     // Solve the system depending on the solver type
     if (solver_type == LU_SOL) {
@@ -289,8 +293,11 @@ void solve_dc_system(int solver_type) {
     else if (solver_type == CHOL_SOL) {
         gsl_linalg_cholesky_solve(gsl_chol, gsl_b, gsl_x);
     }
-    else {
+    else if (solver_type == CG_SOL){
         solve_cg(gsl_b, gsl_x);
+    }
+    else if (solver_type == BICG_SOL){
+        solve_bicg(gsl_b, gsl_x);
     }
 
     printf("Vector x:\n");

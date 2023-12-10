@@ -45,6 +45,9 @@ int main(int argc, char* argv[]) {
     else if (solver_type == CG_SOL) {
         solve_dc_system(CG_SOL);
     }
+    else if (solver_type == BICG_SOL) {
+        solve_dc_system(BICG_SOL);
+    }
 
     if (sweep_flag == TRUE) {
         dc_sweep();
