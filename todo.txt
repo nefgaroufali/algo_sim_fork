@@ -1,14 +1,7 @@
-
-1) Save operating points to different files, according to file name
-2) Leaks
-3) IMprove parsing function visually
-
-Algorithm for DC sweep:
-
-Check if it is i or v
-If it is i:
-                we have the component pointer in the list. we find the poisitive and negative node indexes, we find their node indexes in the hashtable
-                and we changetthe respective element in b
-
-Ifit is v:
-                We have the component pointer. We get the m2_i index and we add nodes - 1. This is the respective elementin the b vector
+1) For circuit6, the bicg algorithm needs 2 more iterations to converge. Ask the assistants if that is an issue, should we add more iterations, etc.
+2) Have files with the known correct solution for each circuit (4,5,6,7,spd) so that we dont have to re-run or use spice every time
+    This includes not only the .op files, but the gnuplot inputs as well
+3) Calculate the preconditioner elements once, before the loop in cg and bicg. Currently they are calculated every time the preconditioner is called
+4) Maybe create separate functions for some of the linear algebra operations
+5) I have commented out the command that calls gnuplot, so add it back
+6) Free the memory
