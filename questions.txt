@@ -1,8 +1,0 @@
-Does the ground need to be treated differently? e.g. hardcoded to be at index 0?
-Is it a good idea to parse the file first to:
-    a) Check for illegal lines / comp types
-    b) Dynamically allocate the hash table size?
-
-    2d-3d array
-    Ground in hash table?
-    

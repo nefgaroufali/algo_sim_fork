@@ -1,1 +1,0 @@
-set terminal png; set output 'file_0.png'; plot 'file_0.txt' with lines

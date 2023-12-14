@@ -165,10 +165,10 @@ void add_to_plot_file(double b_vector_value, double x_vector_value, int i) {
 
     // Check if the file corresponding to i is already open
     if (filePointers[i] == NULL) {
-        char filename[20];
-        snprintf(filename, sizeof(filename), "file_%d.txt", i);
+        char filename[30];
+        snprintf(filename, sizeof(filename), "output/file_%d.txt", i);
 
-        // Open the file in write mode
+        // Open the file in write mode inside the "output" subdirectory
         filePointers[i] = fopen(filename, "w");
 
         // Check if the file is opened successfully
@@ -186,7 +186,7 @@ void add_to_plot_file(double b_vector_value, double x_vector_value, int i) {
 
     // Code to generate the GNU Plot command to create the plot
     char plot_command[100];
-    snprintf(plot_command, sizeof(plot_command), "set terminal png; set output 'file_%d.png'; plot 'file_%d.txt' with lines", i, i);
+    snprintf(plot_command, sizeof(plot_command), "set terminal png; set output 'output/file_%d.png'; plot 'output/file_%d.txt' with lines", i, i);
 
     // Generate a temporary script file to run the GNU Plot commands
     FILE *gnuplotScript = fopen("plot_script.gnu", "w");
@@ -306,7 +306,7 @@ void solve_dc_system(int solver_type) {
 
     // Open the file in which the operating point will be printed
     FILE *op_file;
-    op_file = fopen("dc_solution.op", "w");
+    op_file = fopen("output/dc_solution.op", "w");
 
     // Print the solution to the file
     // First n-1 elements are the voltages of the nodes
