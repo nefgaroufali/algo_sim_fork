@@ -288,15 +288,19 @@ void solve_dc_system(int solver_type) {
 
     // Solve the system depending on the solver type
     if (solver_type == LU_SOL) {
+        printf("LU\n");
         gsl_linalg_LU_solve(gsl_LU, gsl_p, gsl_b, gsl_x);
     }
     else if (solver_type == CHOL_SOL) {
+        printf("CHOL\n");
         gsl_linalg_cholesky_solve(gsl_chol, gsl_b, gsl_x);
     }
     else if (solver_type == CG_SOL){
+        printf("CG\n");
         solve_cg(gsl_b, gsl_x);
     }
     else if (solver_type == BICG_SOL){
+        printf("BICG\n");
         solve_bicg(gsl_b, gsl_x);
     }
 

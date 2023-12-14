@@ -39,7 +39,7 @@ void solve_cg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
 
     for (int i = 0; i < max_iter; i++) {
 
-        r_norm = gsl_blas_dnrm2(gsl_r);
+        r_norm = gsl_blas_dnrm2(gsl_r);     // norm of vector r
         if (r_norm/b_norm <= itol) break;
 
         gsl_z = preconditioner_solve(gsl_r);    // Solve Mz = r
@@ -103,8 +103,8 @@ void solve_bicg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
     if (b_norm == 0) b_norm = 1;            // If the norm of b is 0, make it 1
 
     for (int i = 0; i < 2*max_iter; i++) {
-
-        r_norm = gsl_blas_dnrm2(gsl_r);
+        
+        r_norm = gsl_blas_dnrm2(gsl_r);     // norm of vector r
         if (r_norm/b_norm <= itol) break;
 
         gsl_z = preconditioner_solve(gsl_r);    // Solve Mz = r
@@ -144,7 +144,7 @@ void solve_bicg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
 }
 
 // This function executes the preconditioning process, filling vector gsl_z
-// Element i of gsl_z[i] = r[i] * 1/A[i][i]
+// Element i of z[i] = r[i] * 1/A[i][i]
 gsl_vector* preconditioner_solve(gsl_vector *gsl_r) {
 
     gsl_vector *gsl_z = gsl_vector_alloc(A_dim);
