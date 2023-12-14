@@ -21,6 +21,7 @@ extern int lines;   // The number of lines in the input file
 extern int solver_type; // The type of solver (LU or Chol)
 extern double DC_arguments[3];  // The three arguments to .dc: Low, High, Step
 extern int sweep_flag; // When this flag is raised, do dc_sweep
+extern float itol; // tolerance as exit condition for iterative solver
 
 void number_of_lines(char *file_name);
 void parse(char *file_name);

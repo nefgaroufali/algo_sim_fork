@@ -1,0 +1,36 @@
+
+* Updated SPICE Netlist with Small R, I, and C Components
+
+* Nodes: 0 (Ground), 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+
+* Resistors
+R1 1 2 1e-2
+R2 2 3 2.2e-2
+R3 3 4 4.7e-3
+R4 4 5 1.5e-2
+R5 5 6 6.8e-3
+R6 6 7 8.2e-3
+R7 7 8 1.2e-2
+R8 8 9 5.6e-3
+R9 9 10 3.3e-2
+
+* Current Sources
+I1 2 0 1e-5
+I2 3 0 2.5e-5
+I3 5 0 1.8e-5
+
+* Capacitors
+C1 1 3 1e-4
+C2 2 0 4.7e-5
+C3 4 6 2.2e-4
+C4 7 9 3.3e-4
+
+
+
+*.OPTIONS SPD ITER
+*.OPTIONS SPD 
+*.OPTIONS ITER
+
+.dc i1 0 1 0.1
+
+.print v(2)

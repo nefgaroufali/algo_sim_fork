@@ -6,6 +6,8 @@
 #include "structs.h"
 #include "mna.h"
 #include "direct_sol.h"
+#include "gsl.h"
+#include "iter_sol.h"
 
 int main(int argc, char* argv[]) {
 
@@ -34,11 +36,17 @@ int main(int argc, char* argv[]) {
         form_LU();
         solve_dc_system(LU_SOL);
     }
-    else {  // if solver_type == CHOL_SOL
+    else if (solver_type == CHOL_SOL) {
         form_chol();
         if (spd == TRUE) {
             solve_dc_system(CHOL_SOL);
         }
+    }
+    else if (solver_type == CG_SOL) {
+        solve_dc_system(CG_SOL);
+    }
+    else if (solver_type == BICG_SOL) {
+        solve_dc_system(BICG_SOL);
     }
 
     if (sweep_flag == TRUE) {
