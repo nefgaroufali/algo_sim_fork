@@ -278,7 +278,8 @@ int parse_plot_arg(char *token) {
     }
 
     char *plot_node_str = (char *) malloc(sizeof(char) * (token_len - 3) + 1); // -2 for the parentheses and -1 for v or i and +1 for \0
-    strncpy(plot_node_str, token + 2, token_len-3); 
+    strncpy(plot_node_str, token + 2, token_len-3);
+    plot_node_str[token_len-3] = '\0';
 
     // Searches if the node exists, in the hash table
     node_i = find_hash_node(&node_hash_table, plot_node_str);

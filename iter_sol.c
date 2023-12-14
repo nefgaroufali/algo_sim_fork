@@ -39,10 +39,10 @@ void solve_cg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
 
     for (int i = 0; i < max_iter; i++) {
 
-        r_norm = gsl_blas_dnrm2(gsl_r);     // norm of vector r
+        r_norm = gsl_blas_dnrm2(gsl_r);
         if (r_norm/b_norm <= itol) break;
 
-        gsl_z = preconditioner_solve(gsl_r);    // Solve Mz = r
+        gsl_z = preconditioner_solve(gsl_r, gsl_z);    // Solve Mz = r
 
         gsl_blas_ddot(gsl_r, gsl_z, &rho);   // dot(r,z)
 
@@ -66,6 +66,13 @@ void solve_cg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
         gsl_blas_daxpy(-alpha, gsl_q, gsl_r);           // r = r - alpha*q
 
     }
+
+    gsl_vector_free(gsl_r);
+    gsl_vector_free(gsl_Ax);
+    gsl_vector_free(gsl_z);
+    gsl_vector_free(gsl_p);
+    gsl_vector_free(gsl_q);
+    
 
 }
 
@@ -103,12 +110,12 @@ void solve_bicg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
     if (b_norm == 0) b_norm = 1;            // If the norm of b is 0, make it 1
 
     for (int i = 0; i < 2*max_iter; i++) {
-        
-        r_norm = gsl_blas_dnrm2(gsl_r);     // norm of vector r
+
+        r_norm = gsl_blas_dnrm2(gsl_r);
         if (r_norm/b_norm <= itol) break;
 
-        gsl_z = preconditioner_solve(gsl_r);    // Solve Mz = r
-        gsl_z_bicg = preconditioner_solve(gsl_r_bicg);    // Solve Mz' = r'
+        gsl_z = preconditioner_solve(gsl_r, gsl_z);    // Solve Mz = r
+        gsl_z_bicg = preconditioner_solve(gsl_r_bicg, gsl_z_bicg);    // Solve Mz' = r'
 
         gsl_blas_ddot(gsl_r_bicg, gsl_z, &rho);   // dot(r',z)
 
@@ -141,13 +148,23 @@ void solve_bicg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
 
     }
 
+    gsl_vector_free(gsl_r);
+    gsl_vector_free(gsl_r_bicg);
+    gsl_vector_free(gsl_Ax);
+    gsl_vector_free(gsl_z);
+    gsl_vector_free(gsl_z_bicg);
+    gsl_vector_free(gsl_p);
+    gsl_vector_free(gsl_p_bicg);
+    gsl_vector_free(gsl_q);
+    gsl_vector_free(gsl_q_bicg);
+
 }
 
 // This function executes the preconditioning process, filling vector gsl_z
-// Element i of z[i] = r[i] * 1/A[i][i]
-gsl_vector* preconditioner_solve(gsl_vector *gsl_r) {
+// Element i of gsl_z[i] = r[i] * 1/A[i][i]
+gsl_vector* preconditioner_solve(gsl_vector *gsl_r, gsl_vector *gsl_z) {
 
-    gsl_vector *gsl_z = gsl_vector_alloc(A_dim);
+    //gsl_vector *gsl_z = gsl_vector_alloc(A_dim);
     double cur_A_element;
     double cur_z_element;
 

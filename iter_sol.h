@@ -9,6 +9,6 @@
 
 void solve_cg(gsl_vector* cur_gsl_b, gsl_vector *cur_gsl_x);
 void solve_bicg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x);
-gsl_vector* preconditioner_solve(gsl_vector *gsl_r);
+gsl_vector* preconditioner_solve(gsl_vector *gsl_r, gsl_vector *gsl_z);
 
 #endif

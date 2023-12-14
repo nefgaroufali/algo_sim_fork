@@ -201,10 +201,10 @@ void add_to_plot_file(double b_vector_value, double x_vector_value, int i) {
     
 
     // // Execute GNU Plot using the script file
-    // system("gnuplot plot_script.gnu");
+    system("gnuplot plot_script.gnu");
 
     // // Clean up: remove the temporary script file
-    // remove("plot_script.gnu");
+    remove("plot_script.gnu");
 }
 
 // This function frees the memory occupied by the plot node indexes
@@ -288,19 +288,15 @@ void solve_dc_system(int solver_type) {
 
     // Solve the system depending on the solver type
     if (solver_type == LU_SOL) {
-        printf("LU\n");
         gsl_linalg_LU_solve(gsl_LU, gsl_p, gsl_b, gsl_x);
     }
     else if (solver_type == CHOL_SOL) {
-        printf("CHOL\n");
         gsl_linalg_cholesky_solve(gsl_chol, gsl_b, gsl_x);
     }
     else if (solver_type == CG_SOL){
-        printf("CG\n");
         solve_cg(gsl_b, gsl_x);
     }
     else if (solver_type == BICG_SOL){
-        printf("BICG\n");
         solve_bicg(gsl_b, gsl_x);
     }
 
