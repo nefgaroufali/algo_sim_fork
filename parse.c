@@ -21,6 +21,7 @@ int sweep_flag = 0;
 int solver_type = LU_SOL;
 double DC_arguments[3];
 float itol = 1e-3;
+int nonzeros = 0;
 
 // This function counts the lines of the file //
 void number_of_lines(char* file_name){
@@ -326,6 +327,7 @@ int option_command(char* token) {
 
     int spd_flag = 0;
     int iter_flag = 0;
+    int sparse_flag = 0;
 
     // Parsing of the OPTIONS command ends after the full command is parsed
     while(1) {
@@ -341,15 +343,27 @@ int option_command(char* token) {
         else if (strcmp(str_tolower(token), "iter") == 0) {
             iter_flag = 1;
         }
+
+        else if (strcmp(str_tolower(token), "sparse") == 0) {
+            sparse_flag = 1;
+        }
         else if (strncmp(str_tolower(token), "itol=", strlen("itol=")) == 0) {
             itol = strtof(token + strlen("itol="), NULL);
         }
     }
 
-    if      (spd_flag == 1 && iter_flag == 0) solver_type = CHOL_SOL;
-    else if (spd_flag == 0 && iter_flag == 1) solver_type = BICG_SOL;
-    else if (spd_flag == 1 && iter_flag == 1) solver_type = CG_SOL;
-    //Default:                                solver_type = LU_SOL 
+    solver_type = 4*sparse_flag + 2*iter_flag + spd_flag;
+
+    // if      (sparse_flag == 0 && iter_flag == 0 && spd_flag == 0) solver_type = LU_SOL;
+    // else if (sparse_flag == 0 && iter_flag == 0 && spd_flag == 1) solver_type = CHOL_SOL;
+    // else if (sparse_flag == 0 && iter_flag == 1 && spd_flag == 0) solver_type = BICG_SOL;
+    // else if (sparse_flag == 0 && iter_flag == 1 && spd_flag == 1) solver_type = CG_SOL;
+    // else if (sparse_flag == 1 && iter_flag == 0 && spd_flag == 0) solver_type = SPARSE_LU_SOL;
+    // else if (sparse_flag == 1 && iter_flag == 0 && spd_flag == 1) solver_type = SPARSE_CHOL_SOL;
+    // else if (sparse_flag == 1 && iter_flag == 1 && spd_flag == 0) solver_type = SPARSE_BICG_SOL;
+    // else if (sparse_flag == 1 && iter_flag == 1 && spd_flag == 1) solver_type = SPARSE_CG_SOL;
+
+
 
     return PARSING_SUCCESSFUL;
 }

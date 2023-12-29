@@ -11,7 +11,7 @@ INCLUDES = -I/home/makaragiannis/gsl/include
 LIBS = -L/home/makaragiannis/gsl/lib -lgsl -lgslcblas -lm
 
 # Source files
-SRC = main.c parse.c structs.c mna.c direct_sol.c iter_sol.c gsl.c
+SRC = main.c parse.c structs.c mna.c direct_sol.c iter_sol.c gsl.c csparse.c sparse_sol.c
 
 # Object files directory
 OBJ_DIR = obj

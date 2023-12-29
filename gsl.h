@@ -8,11 +8,6 @@
 #define TRUE 1
 #define FALSE 0
 
-#define LU_SOL 0
-#define CHOL_SOL 1
-#define BICG_SOL 2
-#define CG_SOL 3
-
 extern gsl_matrix* gsl_A;
 extern gsl_vector* gsl_b;
 extern gsl_vector* gsl_x;

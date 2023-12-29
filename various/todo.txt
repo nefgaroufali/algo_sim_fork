@@ -1,7 +1,2 @@
-1) For circuit6, the bicg algorithm needs 2 more iterations to converge. Ask the assistants if that is an issue, should we add more iterations, etc.
-2) Have files with the known correct solution for each circuit (4,5,6,7,spd) so that we dont have to re-run or use spice every time
-    This includes not only the .op files, but the gnuplot inputs as well
-3) Calculate the preconditioner elements once, before the loop in cg and bicg. Currently they are calculated every time the preconditioner is called
-4) Maybe create separate functions for some of the linear algebra operations
-5) I have commented out the command that calls gnuplot, so add it back
-6) Free the memory
+1) Create a function that raises a flag if a non-spd element is read
+2) 

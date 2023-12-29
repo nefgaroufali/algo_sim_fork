@@ -200,11 +200,11 @@ void add_to_plot_file(double b_vector_value, double x_vector_value, int i) {
     fclose(gnuplotScript);
     
 
-    // // Execute GNU Plot using the script file
-    system("gnuplot plot_script.gnu");
+    // // // Execute GNU Plot using the script file
+    // system("gnuplot plot_script.gnu");
 
-    // // Clean up: remove the temporary script file
-    remove("plot_script.gnu");
+    // // // Clean up: remove the temporary script file
+    // remove("plot_script.gnu");
 }
 
 // This function frees the memory occupied by the plot node indexes

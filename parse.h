@@ -11,6 +11,15 @@
 #define ISNOT_BLANK 0
 #define IS_BLANK 1
 
+#define LU_SOL 0
+#define CHOL_SOL 1
+#define BICG_SOL 2
+#define CG_SOL 3
+#define SPARSE_LU_SOL 4
+#define SPARSE_CHOL_SOL 5
+#define SPARSE_BICG_SOL 6
+#define SPARSE_CG_SOL 7
+
 #define DELIMITERS " /t/n/r"
 
 extern char valid_comp_list[16];
@@ -22,6 +31,7 @@ extern int solver_type; // The type of solver (LU or Chol)
 extern double DC_arguments[3];  // The three arguments to .dc: Low, High, Step
 extern int sweep_flag; // When this flag is raised, do dc_sweep
 extern float itol; // tolerance as exit condition for iterative solver
+extern int nonzeros; // Number of nonzeros, used by sparse structures
 
 void number_of_lines(char *file_name);
 void parse(char *file_name);

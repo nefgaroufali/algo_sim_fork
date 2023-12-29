@@ -28,30 +28,49 @@ int main(int argc, char* argv[]) {
     // print_comp_list(head);
 
     create_equations();
-
     form_gsl_system();
 
+    switch (solver_type) {
+        case LU_SOL:
+            form_LU();
+            solve_dc_system(LU_SOL);
+            break;
 
-    if (solver_type == LU_SOL) {
-        form_LU();
-        solve_dc_system(LU_SOL);
-    }
-    else if (solver_type == CHOL_SOL) {
-        form_chol();
-        if (spd == TRUE) {
-            solve_dc_system(CHOL_SOL);
-        }
-    }
-    else if (solver_type == CG_SOL) {
-        solve_dc_system(CG_SOL);
-    }
-    else if (solver_type == BICG_SOL) {
-        solve_dc_system(BICG_SOL);
+        case CHOL_SOL:
+            form_chol();
+            if (spd == TRUE) {
+                solve_dc_system(CHOL_SOL);
+            }
+            break;
+
+        case CG_SOL:
+            solve_dc_system(CG_SOL);
+            break;
+
+        case BICG_SOL:
+            solve_dc_system(BICG_SOL);
+            break;
+
+        case SPARSE_LU_SOL:
+        case SPARSE_CHOL_SOL:
+        case SPARSE_CG_SOL:
+        case SPARSE_BICG_SOL:
+            // Print the solver type for the extra cases
+            printf("Solver Type: %d\n", solver_type);
+            break;
+
+        default:
+            // Handle any other cases if needed
+            break;
     }
 
+    print_arrays();
+    printf("Non-zeros of A is %d\n", count_nonzeros());
+    
     if (sweep_flag == TRUE) {
         dc_sweep();
     }
+
 
     // Close all open files before exiting the program
     for (int i = 0; i < 5; i++) {

@@ -18,6 +18,8 @@ c2 2 0 0.2
 l1 12 2 0.1
 
 .OPTIONS ITER
+*.OPTIONS SPARSE
+*.OPTIONS ITER SPARSE
 
 *.dc v1 0 3 0.01
 *.plot v(4)
