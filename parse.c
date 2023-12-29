@@ -197,6 +197,8 @@ int parse_line(char* line) {
     // Add the component to the linked list
     append_component(&head, &tail, comp_type, comp_name, positive_node, negative_node, value);
 
+    nonzeros += increment_nonzeros(comp_type, positive_node, negative_node);    // count how many nonzeros should be added
+
     return PARSING_SUCCESSFUL;
 
 }
@@ -236,13 +238,13 @@ char* str_tolower(char *str) {
 }
 
 // This function checks if the given node is ground or not
-int isnot_ground(char *node) {
+int is_ground(char *node) {
 
     if ((node[0] == '0') && (node[1] == '\0')) {
-        return 0;
+        return 1;
     }
 
-    return 1;
+    return 0;
 }
 
 // This function checks if the component type is a voltage source or an inductor
@@ -424,6 +426,36 @@ int plot_command(char* token) {
     return PARSING_SUCCESSFUL;
 }
 
+// This function returns the number of nonzeros to be added for this component
+int increment_nonzeros(char comp_type, char* positive_node, char* negative_node) {
 
+    int node_is_ground = FALSE;
+
+    if (is_ground(positive_node) || is_ground(negative_node)) {
+        node_is_ground = TRUE;
+    }
+
+    if (comp_type == 'v' || comp_type == 'l') {
+        if (node_is_ground) {
+            return 2;
+        }
+        else {
+            return 4;
+        }
+    }
+    else if (comp_type == 'r') {
+        if (node_is_ground) {
+            return 1;
+        }
+        else {
+            return 4;
+        }
+    }
+
+    // If component is I or C, no element is added, so no nonzeros
+    return 0;
+
+
+}
 
 

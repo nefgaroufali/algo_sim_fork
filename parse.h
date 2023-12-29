@@ -39,12 +39,13 @@ int parse_line(char *line);
 int valid_comp_type(char comp_type);
 int is_blank_line(const char *line);
 char* str_tolower(char *str);
-int isnot_ground(char *node);
+int is_ground(char *node);
 int check_for_V_or_L(char comp_type);
 int parse_plot_arg(char *token);
 int parse_spice_command(char* token);
 int option_command(char* token);
 int dc_command(char* token);
 int plot_command(char* token) ;
+int increment_nonzeros(char comp_type, char* positive_node, char* negative_node);
 
 #endif

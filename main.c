@@ -27,16 +27,17 @@ int main(int argc, char* argv[]) {
     // print_hash_table(&node_hash_table);
     // print_comp_list(head);
 
-    create_equations();
-    form_gsl_system();
-
     switch (solver_type) {
         case LU_SOL:
+            create_equations();
+            form_gsl_system();
             form_LU();
             solve_dc_system(LU_SOL);
             break;
 
         case CHOL_SOL:
+            create_equations();
+            form_gsl_system();
             form_chol();
             if (spd == TRUE) {
                 solve_dc_system(CHOL_SOL);
@@ -44,10 +45,14 @@ int main(int argc, char* argv[]) {
             break;
 
         case CG_SOL:
+            create_equations();
+            form_gsl_system();
             solve_dc_system(CG_SOL);
             break;
 
         case BICG_SOL:
+            create_equations();
+            form_gsl_system();
             solve_dc_system(BICG_SOL);
             break;
 
@@ -65,8 +70,8 @@ int main(int argc, char* argv[]) {
     }
 
     print_arrays();
-    printf("Non-zeros of A is %d\n", count_nonzeros());
-    
+    printf("Non-zeros of A is %d but counted nonzeros is %d\n", count_nonzeros(), nonzeros);
+
     if (sweep_flag == TRUE) {
         dc_sweep();
     }
