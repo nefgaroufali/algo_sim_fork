@@ -72,8 +72,7 @@ int main(int argc, char* argv[]) {
     }
 
     print_arrays();
-    printf("Non-zeros of A is %d but counted nonzeros is %d\n", count_nonzeros(), nonzeros);
-
+    print_sparse_arrays();
     if (sweep_flag == TRUE) {
         dc_sweep();
     }
@@ -88,7 +87,6 @@ int main(int argc, char* argv[]) {
     }
 
     free_gsl();
-
     free_hash_table(&node_hash_table);
     free_comp_list(head);
     free_A_array();

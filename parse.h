@@ -33,6 +33,8 @@ extern int sweep_flag; // When this flag is raised, do dc_sweep
 extern float itol; // tolerance as exit condition for iterative solver
 extern int nonzeros; // Number of nonzeros, used by sparse structures
 
+extern int A_dim;
+
 void number_of_lines(char *file_name);
 void parse(char *file_name);
 int parse_line(char *line);
