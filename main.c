@@ -8,6 +8,7 @@
 #include "direct_sol.h"
 #include "gsl.h"
 #include "iter_sol.h"
+#include "sparse_sol.h"
 
 int main(int argc, char* argv[]) {
 
@@ -60,6 +61,7 @@ int main(int argc, char* argv[]) {
         case SPARSE_CHOL_SOL:
         case SPARSE_CG_SOL:
         case SPARSE_BICG_SOL:
+            form_sparse();
             // Print the solver type for the extra cases
             printf("Solver Type: %d\n", solver_type);
             break;

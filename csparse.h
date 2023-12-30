@@ -134,4 +134,5 @@ csd *cs_ddone (csd *D, cs *C, void *w, int ok) ;
 #define CS_MARKED(Ap,j) (Ap [j] < 0)
 #define CS_MARK(Ap,j) { Ap [j] = CS_FLIP (Ap [j]) ; }
 #define CS_OVERFLOW(n,size) (n > INT_MAX / (int) size)
+#define CS_TRIPLET(A) (A && (A->nz >= 0))
 #endif

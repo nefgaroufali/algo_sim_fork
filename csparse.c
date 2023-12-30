@@ -890,6 +890,7 @@ cs *cs_compress (const cs *T)
     int m, n, nz, p, k, *Cp, *Ci, *w, *Ti, *Tj ;
     double *Cx, *Tx ;
     cs *C ;
+    if (!CS_TRIPLET (T)) return (NULL) ;
     /* check inputs */
     m = T->m ; n = T->n ; Ti = T->i ; Tj = T->p ; Tx = T->x ; nz = T->nz ;
     C = cs_spalloc (m, n, nz, Tx != NULL, 0) ;
@@ -912,7 +913,6 @@ cs *cs_compress (const cs *T)
     return (cs_done (C, w, NULL, 1)) ;
     /* success; free w and return C */
 }
-
 
 /* add an entry to a triplet matrix; return 1 if ok, 0 otherwise */
 int cs_entry (cs *T, int i, int j, double x)
