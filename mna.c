@@ -260,3 +260,18 @@ void create_equations(){
 
     return;
 }
+
+int count_nonzeros() {
+
+    int nonzeros = 0;
+
+    for (int i = 0; i < (A_dim); i++) {
+        for (int j = 0; j < (A_dim); j++) {
+            if (A_array[i*A_dim + j] != 0) {
+                nonzeros++;
+            }
+        }
+    }
+
+    return nonzeros;
+}

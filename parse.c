@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include "parse.h"
 #include "structs.h"
+#include "gsl.h"
 #include "direct_sol.h"
 
 // The valid component types //
@@ -19,6 +20,8 @@ int lines = 0;
 int sweep_flag = 0;
 int solver_type = LU_SOL;
 double DC_arguments[3];
+float itol = 1e-3;
+int nonzeros = 0;
 
 // This function counts the lines of the file //
 void number_of_lines(char* file_name){
@@ -194,6 +197,8 @@ int parse_line(char* line) {
     // Add the component to the linked list
     append_component(&head, &tail, comp_type, comp_name, positive_node, negative_node, value);
 
+    nonzeros += increment_nonzeros(comp_type, positive_node, negative_node);    // count how many nonzeros should be added
+
     return PARSING_SUCCESSFUL;
 
 }
@@ -233,13 +238,13 @@ char* str_tolower(char *str) {
 }
 
 // This function checks if the given node is ground or not
-int isnot_ground(char *node) {
+int is_ground(char *node) {
 
     if ((node[0] == '0') && (node[1] == '\0')) {
-        return 0;
+        return 1;
     }
 
-    return 1;
+    return 0;
 }
 
 // This function checks if the component type is a voltage source or an inductor
@@ -276,7 +281,8 @@ int parse_plot_arg(char *token) {
     }
 
     char *plot_node_str = (char *) malloc(sizeof(char) * (token_len - 3) + 1); // -2 for the parentheses and -1 for v or i and +1 for \0
-    strncpy(plot_node_str, token + 2, token_len-3); 
+    strncpy(plot_node_str, token + 2, token_len-3);
+    plot_node_str[token_len-3] = '\0';
 
     // Searches if the node exists, in the hash table
     node_i = find_hash_node(&node_hash_table, plot_node_str);
@@ -321,14 +327,45 @@ int parse_spice_command(char* token)
 
 int option_command(char* token) {
 
-    token = strtok(NULL, " \t\n\r");
-    if(token == NULL) {
-        return PARSING_ERROR;
+    int spd_flag = 0;
+    int iter_flag = 0;
+    int sparse_flag = 0;
+
+    // Parsing of the OPTIONS command ends after the full command is parsed
+    while(1) {
+        token = strtok(NULL, " \t\n\r");
+        if(token == NULL) {
+            break;
+        }
+
+        else if (strcmp(str_tolower(token), "spd") == 0) {
+            spd_flag = 1;
+        }
+
+        else if (strcmp(str_tolower(token), "iter") == 0) {
+            iter_flag = 1;
+        }
+
+        else if (strcmp(str_tolower(token), "sparse") == 0) {
+            sparse_flag = 1;
+        }
+        else if (strncmp(str_tolower(token), "itol=", strlen("itol=")) == 0) {
+            itol = strtof(token + strlen("itol="), NULL);
+        }
     }
 
-    if (strcmp(str_tolower(token), "spd") == 0) {
-        solver_type = CHOL_SOL;
-    }
+    solver_type = 4*sparse_flag + 2*iter_flag + spd_flag;
+
+    // if      (sparse_flag == 0 && iter_flag == 0 && spd_flag == 0) solver_type = LU_SOL;
+    // else if (sparse_flag == 0 && iter_flag == 0 && spd_flag == 1) solver_type = CHOL_SOL;
+    // else if (sparse_flag == 0 && iter_flag == 1 && spd_flag == 0) solver_type = BICG_SOL;
+    // else if (sparse_flag == 0 && iter_flag == 1 && spd_flag == 1) solver_type = CG_SOL;
+    // else if (sparse_flag == 1 && iter_flag == 0 && spd_flag == 0) solver_type = SPARSE_LU_SOL;
+    // else if (sparse_flag == 1 && iter_flag == 0 && spd_flag == 1) solver_type = SPARSE_CHOL_SOL;
+    // else if (sparse_flag == 1 && iter_flag == 1 && spd_flag == 0) solver_type = SPARSE_BICG_SOL;
+    // else if (sparse_flag == 1 && iter_flag == 1 && spd_flag == 1) solver_type = SPARSE_CG_SOL;
+
+
 
     return PARSING_SUCCESSFUL;
 }
@@ -389,6 +426,36 @@ int plot_command(char* token) {
     return PARSING_SUCCESSFUL;
 }
 
+// This function returns the number of nonzeros to be added for this component
+int increment_nonzeros(char comp_type, char* positive_node, char* negative_node) {
 
+    int node_is_ground = FALSE;
+
+    if (is_ground(positive_node) || is_ground(negative_node)) {
+        node_is_ground = TRUE;
+    }
+
+    if (comp_type == 'v' || comp_type == 'l') {
+        if (node_is_ground) {
+            return 2;
+        }
+        else {
+            return 4;
+        }
+    }
+    else if (comp_type == 'r') {
+        if (node_is_ground) {
+            return 1;
+        }
+        else {
+            return 4;
+        }
+    }
+
+    // If component is I or C, no element is added, so no nonzeros
+    return 0;
+
+
+}
 
 
