@@ -4,13 +4,14 @@
 #include "structs.h"
 #include "csparse.h"
 
-extern cs *sparse_Α;
+extern cs *sparse_A;
 extern cs *sparse_C;
 extern css *css_S;
 extern csn *csn_N;
 extern int sparse_m2_count;
 extern int N; //dimension
 extern double *b_array_sparse;
+extern double *x_array_sparse;
 
 void form_sparse();
 void sparse_fill_with_r(component *current, int *nonzero_counter);

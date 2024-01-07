@@ -8,6 +8,9 @@
 #include "mna.h"
 #include "structs.h"
 #include "parse.h"
+#include "sparse_sol.h"
+#include "csparse.h"
+#include "string.h"
 
 gsl_matrix* gsl_A = NULL;
 gsl_vector *gsl_b = NULL;
@@ -122,6 +125,12 @@ void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value, char type) 
     else if (solver_type == SPARSE_CHOL_SOL) {
         solve_sparse_chol();
     }
+    else if (solver_type == SPARSE_CG_SOL) {
+        solve_sparse_cg();
+    }
+    else if (solver_type == SPARSE_BICG_SOL) {
+        solve_sparse_bicg();
+    }
     
 
     int i;
@@ -144,6 +153,62 @@ void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value, char type) 
     gsl_vector_free(temp_gsl_x);
 
 }
+
+
+void solve_dc_sweep_system_sparse(double *temp_b_array_sparse , double cur_value, char type) {
+
+    double *temp_x_array_sparse = calloc(N, sizeof(double));
+    memcpy(temp_x_array_sparse, x_array_sparse, N*sizeof(double));
+    //gsl_vector_memcpy(temp_gsl_x, gsl_x);   // for the iterative methods
+
+    /*if (solver_type == LU_SOL) {
+        gsl_linalg_LU_solve(gsl_LU, gsl_p, temp_gsl_b, temp_gsl_x);
+    }
+    else if (solver_type == CHOL_SOL) {
+        gsl_linalg_cholesky_solve(gsl_chol, temp_gsl_b, temp_gsl_x);
+    }
+    else if (solver_type == CG_SOL) {
+        solve_cg(temp_gsl_b, temp_gsl_x);
+    }
+    else if (solver_type == BICG_SOL) {
+        solve_bicg(temp_gsl_b, temp_gsl_x);
+    }*/
+    if (solver_type == SPARSE_LU_SOL) {
+        solve_sparse_lu();
+    }
+    else if (solver_type == SPARSE_CHOL_SOL) {
+        solve_sparse_chol();
+    }
+    else if (solver_type == SPARSE_CG_SOL) {
+        solve_sparse_cg();
+    }
+    else if (solver_type == SPARSE_BICG_SOL) {
+        solve_sparse_bicg();
+    }
+    
+
+    int i;
+    int plot_node_i;
+    double b_vector_value, x_vector_value;
+
+    // Plot_node_i: The index of the node(s) that are to be plotted
+    // Sweep_node_i: The index of the node whose value in the b vector changes
+
+    // Get the values that will be printed to the files, then call add_to_plot_file
+    for (i = 0; i < plot_node_count; i++) {
+        plot_node_i = plot_node_indexes[i];
+        b_vector_value = cur_value;
+        x_vector_value = temp_x_array_sparse[plot_node_i];
+        //x_vector_value = gsl_vector_get(temp_gsl_x, plot_node_i);
+
+        add_to_plot_file(b_vector_value, x_vector_value, i);
+
+    }
+
+    //gsl_vector_free(temp_gsl_x);
+
+}
+
 
 // Adds the node to be plotted to a list of all the nodes to be plotted
 // IMPORTANT: These indexes start at 0.
@@ -285,6 +350,69 @@ void dc_sweep() {
 
 }
 
+void dc_sweep_sparse() {
+
+    double cur_value;
+    double low = DC_arguments[0];
+    double high = DC_arguments[1];
+    double step = DC_arguments[2];
+
+    int pos_sweep_node_i, neg_sweep_node_i, sweep_node_i;
+
+    // Temp_gsl_b: Same as gsl_b, with only the sweep value changing
+
+    double *temp_b_array_sparse = calloc(N, sizeof(double));
+    memcpy(temp_b_array_sparse, b_array_sparse, N*sizeof(double));
+
+    component *current = sweep_component;
+
+    // If the component is a current source, find the index of both nodes in the hash table
+
+    // Change the current value, adding the step in each iteration, then change the bvector
+    // Then solve the linear system in each iteration, in function solve_dc_sweep_system
+
+    // Only change the b vector if the node is not ground
+
+    if (current->comp_type == 'i') {
+        pos_sweep_node_i = find_hash_node(&node_hash_table, current->positive_node) - 1; // -1 because 0 is ground
+        neg_sweep_node_i = find_hash_node(&node_hash_table, current->negative_node) - 1;
+
+        cur_value = low;
+        do {
+            if (pos_sweep_node_i != -1) {
+                temp_b_array_sparse[pos_sweep_node_i] = -cur_value;
+            }
+            if (neg_sweep_node_i != -1) {
+                temp_b_array_sparse[neg_sweep_node_i] = cur_value;
+            }
+
+            solve_dc_sweep_system_sparse(temp_b_array_sparse, cur_value, 'i'); 
+            cur_value = cur_value + step;
+        } while (cur_value <= high);
+
+    }
+
+    // If the component is a voltage source, take its index in the m2 part of the b vector
+
+    // Change the current value, adding the step in each iteration, then change the bvector
+    // Then solve the linear system in each iteration, in function solve_dc_sweep_system
+
+    if (current->comp_type == 'v') {
+        sweep_node_i = nodes_n-1 +current->m2_i;
+
+        cur_value = low;
+        do {
+            temp_b_array_sparse[sweep_node_i] = cur_value; 
+
+            solve_dc_sweep_system_sparse(temp_b_array_sparse, cur_value, 'v'); 
+            cur_value = cur_value + step;
+        } while (cur_value <= high);
+    }
+
+    //gsl_vector_free(temp_gsl_b);
+
+}
+
 
 // This function solves the  DC system, with LU or Cholesky or CG or BICG
 // Then writes the dc operating point in a .op file
@@ -313,6 +441,12 @@ void solve_dc_system(int solver_type) {
     else if (solver_type == SPARSE_CHOL_SOL){
         solve_sparse_chol();
     }
+    else if (solver_type == SPARSE_CG_SOL){
+        solve_sparse_cg();
+    }
+    else if (solver_type == SPARSE_BICG_SOL){
+        solve_sparse_bicg();
+    }
 
     printf("Vector x:\n");
     print_gsl_vector(gsl_x, A_dim);
@@ -326,17 +460,33 @@ void solve_dc_system(int solver_type) {
     // First n-1 elements are the voltages of the nodes
     // Last m2 elements are the currents of the V and L components
 
-    for (int i = 0, j=0; i < A_dim; i++) {
+    if(solver_type == SPARSE_LU_SOL || solver_type == SPARSE_CHOL_SOL || solver_type == SPARSE_CG_SOL || solver_type == SPARSE_BICG_SOL){
+        for (int i = 0, j=0; i < N; i++) {
 
-        if(i < nodes_n-1){
-            fprintf(op_file, "v(%s)   %.5lf\n", node_array[i+1], gsl_vector_get(gsl_x, i));    
-        }
-        else
-        {
-            fprintf(op_file, "i(%s)   %.5lf\n", m2_array[j], gsl_vector_get(gsl_x, i));
-            j++;
-        }
+            if(i < nodes_n-1){
+                fprintf(op_file, "v(%s)   %.5lf\n", node_array[i+1], x_array_sparse[i]);    
+            }
+            else
+            {
+                fprintf(op_file, "i(%s)   %.5lf\n", m2_array[j], x_array_sparse[i]);
+                j++;
+            }
 
+        }
+    }
+    else{
+        for (int i = 0, j=0; i < A_dim; i++) {
+
+            if(i < nodes_n-1){
+                fprintf(op_file, "v(%s)   %.5lf\n", node_array[i+1], gsl_vector_get(gsl_x, i));    
+            }
+            else
+            {
+                fprintf(op_file, "i(%s)   %.5lf\n", m2_array[j], gsl_vector_get(gsl_x, i));
+                j++;
+            }
+
+        }
     }
 
     fclose(op_file);

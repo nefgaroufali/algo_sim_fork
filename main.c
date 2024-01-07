@@ -90,7 +90,12 @@ int main(int argc, char* argv[]) {
     print_arrays();
     print_sparse_arrays();
     if (sweep_flag == TRUE) {
-        dc_sweep();
+        if(solver_type == SPARSE_LU_SOL || solver_type == SPARSE_CHOL_SOL || solver_type == SPARSE_CG_SOL || solver_type == SPARSE_BICG_SOL){
+            dc_sweep_sparse();
+        }
+        else{
+            dc_sweep();
+        }
     }
 
 

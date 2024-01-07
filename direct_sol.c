@@ -70,7 +70,7 @@ void solve_sparse_lu(){
     cs_ipvec(N, csn_N->Pinv, b_array_sparse, x);
     cs_lsolve(csn_N->L, x);
     cs_usolve(csn_N->U, x);
-    cs_ipvec(N, css_S->Q, x, b_array_sparse);
+    cs_ipvec(N, css_S->Q, x, x_array_sparse);
 
     free(x);
 }
@@ -92,7 +92,7 @@ void solve_sparse_chol(){
     cs_ipvec(N, css_S->Pinv, b_array_sparse, x);
     cs_lsolve(csn_N->L, x);
     cs_ltsolve(csn_N->L, x);
-    cs_pvec(N, css_S->Pinv, x, b_array_sparse);
+    cs_pvec(N, css_S->Pinv, x, x_array_sparse);
 
     free(x);
 }

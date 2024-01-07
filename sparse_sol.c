@@ -9,6 +9,7 @@ cs *sparse_A;
 cs *sparse_C;
 
 double *b_array_sparse = NULL;
+double *x_array_sparse = NULL;
 
 int sparse_m2_count=0;
 int N;
@@ -211,6 +212,12 @@ void create_b_array_for_sparse() {
 
     // Allocate memory for the array of pointers to rows
     b_array_sparse = (double*)calloc(N, sizeof(double));
+    x_array_sparse = (double*)calloc(N, sizeof(double));
+
+    if(x_array_sparse == NULL){
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
 
     // Check if memory allocation was successful
     if (b_array_sparse == NULL) {
@@ -220,6 +227,12 @@ void create_b_array_for_sparse() {
 }
 
 void print_sparse_arrays() {
+
+    printf("\n *** Printing x array *** \n");
+
+    for (int l = 0; l < N; l++) {
+        printf("%.2lf\t", x_array_sparse[l]);
+    }
 
     printf("\n *** Printing A array *** \n");
 
