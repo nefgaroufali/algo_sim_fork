@@ -7,10 +7,16 @@
 #include "mna.h"
 #include "structs.h"
 #include "parse.h"
+#include "sparse_sol.h"
+
+#include <time.h>
+
 
 gsl_matrix* gsl_LU = NULL;
 gsl_matrix* gsl_chol = NULL;
 gsl_permutation *gsl_p = NULL;
+css *css_S = NULL;
+csn *csn_N = NULL;
 
 
 // This function forms the LU decomposition. 
@@ -48,4 +54,64 @@ void form_chol() {
         spd = TRUE;
     }
 
+}
+
+// This function solves the LU system using sparse methods
+void solve_sparse_lu(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x){
+
+    double* temp_b = malloc(A_dim*sizeof(double *));
+    double* temp_x = malloc(A_dim*sizeof(double *));
+    double *x = (double *) malloc(sizeof(double)* A_dim);
+
+    // The function inputs are gsl vectors, so the b vector needs to be converted to double
+    // so that it can be used by the cs functions
+    gsl_to_double(cur_gsl_b, temp_b);
+
+    // LU Solution
+
+    css_S = cs_sqr(sparse_C, 2, 0);
+    csn_N = cs_lu(sparse_C, css_S, 1);
+
+    cs_ipvec(A_dim, csn_N->Pinv, temp_b, x);
+    cs_lsolve(csn_N->L, x);
+    cs_usolve(csn_N->U, x);
+    cs_ipvec(A_dim, css_S->Q, x, temp_x);
+
+    // The vector needs to be in gsl form, so it must be converted
+    double_to_gsl(cur_gsl_x, temp_x);
+
+    cs_sfree(css_S);
+    cs_nfree(csn_N);
+    free(x);
+    free(temp_b);
+    free(temp_x);
+}
+
+// This function solves the system with the Cholesky algorithm using sparse methods
+void solve_sparse_chol(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x){
+
+    double* temp_b = malloc(A_dim*sizeof(double *));
+    double* temp_x = malloc(A_dim*sizeof(double *));
+    double * x= (double *) malloc(sizeof(double)*A_dim);
+
+    // The function inputs are gsl vectors, so the b vector needs to be converted to double
+    // so that it can be used by the cs functions
+    gsl_to_double(cur_gsl_b, temp_b);
+
+    css_S = cs_schol(sparse_C, 1);
+    csn_N = cs_chol(sparse_C, css_S);
+
+    cs_ipvec(A_dim, css_S->Pinv, temp_b, x);
+    cs_lsolve(csn_N->L, x);
+    cs_ltsolve(csn_N->L, x);
+    cs_pvec(A_dim, css_S->Pinv, x, temp_x);
+
+    // The vector needs to be in gsl form, so it must be converted
+    double_to_gsl(cur_gsl_x, temp_x);
+
+    cs_sfree(css_S);
+    cs_nfree(csn_N);
+    free(x);
+    free(temp_b);
+    free(temp_x);
 }

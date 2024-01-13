@@ -17,7 +17,6 @@ extern int spd; // Flag that indicates if the system is SPD Or not (if Cholesky 
 extern int *plot_node_indexes;
 extern int plot_node_count;
 
-
 extern FILE *filePointers[5]; 
 
 void form_gsl_system();
@@ -34,5 +33,8 @@ void free_plot_node();
 
 void solve_dc_system(int solver_type);
 void dc_sweep();
+
+void gsl_to_double(gsl_vector *gsl_v, double* v);
+void double_to_gsl(gsl_vector *gsl_v, double* v);
 
 #endif

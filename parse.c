@@ -8,6 +8,7 @@
 #include "direct_sol.h"
 
 // The valid component types //
+// Transistor component types are parseable but not used //
 
 char valid_comp_list[16] = {'V', 'I', 'R', 'C', 'L', 'D', 'M', 'Q', 
                            'v', 'i', 'r', 'c', 'l', 'd', 'm', 'q'};
@@ -22,6 +23,9 @@ int solver_type = LU_SOL;
 double DC_arguments[3];
 float itol = 1e-3;
 int nonzeros = 0;
+int spd_flag_circuit = 1;
+
+char circuit_name[30];  // the name circuit taken from the file name
 
 // This function counts the lines of the file //
 void number_of_lines(char* file_name){
@@ -68,6 +72,10 @@ void parse(char* file_name) {
         exit(1);
     }
 
+    // Register the circuit name based on the file name
+    strcpy(circuit_name, strtok(file_name+6, "."));
+    printf("Circuit name is %s\n", circuit_name);
+
     // Parse every line until end of file
     while (fgets(line, LINE_MAX, input_file) != NULL) {
 
@@ -111,7 +119,7 @@ int parse_line(char* line) {
     // Spice command
     if (token[0] == '.') {
 
-        int parse_result =  parse_spice_command(token);
+        int parse_result = parse_spice_command(token);
 
         if (parse_result == PARSING_ERROR) {
             return PARSING_ERROR;
@@ -132,6 +140,7 @@ int parse_line(char* line) {
     // An index number is assigned for the respective component struct field
 
     if ((check_for_V_or_L(comp_type)) == TRUE) {
+        spd_flag_circuit = 0;   // a flag that disables SPD methods
         m2_i = m2;
         add_m2_array(comp_name);
         m2++;
@@ -197,7 +206,7 @@ int parse_line(char* line) {
     // Add the component to the linked list
     append_component(&head, &tail, comp_type, comp_name, positive_node, negative_node, value);
 
-    nonzeros += increment_nonzeros(comp_type, positive_node, negative_node);    // count how many nonzeros should be added
+    nonzeros += increment_nonzeros(comp_type, positive_node, negative_node);    // count how many nonzeros should be added (for sparse methods)
 
     return PARSING_SUCCESSFUL;
 
@@ -302,7 +311,7 @@ int parse_plot_arg(char *token) {
 int parse_spice_command(char* token)
 {
 
-    int parsing_result;
+    int parsing_result = 0;
     // .options //
     if (strcmp(str_tolower(token), ".options") == 0)
     {
@@ -340,6 +349,10 @@ int option_command(char* token) {
 
         else if (strcmp(str_tolower(token), "spd") == 0) {
             spd_flag = 1;
+            if (spd_flag_circuit == 0) {
+                printf("Error! System is not SPD!\n");
+                return PARSING_ERROR;
+            }
         }
 
         else if (strcmp(str_tolower(token), "iter") == 0) {
@@ -353,6 +366,8 @@ int option_command(char* token) {
             itol = strtof(token + strlen("itol="), NULL);
         }
     }
+
+    // solver_type has values from 0 to 7, so binary arithmetic can be used
 
     solver_type = 4*sparse_flag + 2*iter_flag + spd_flag;
 
@@ -369,6 +384,8 @@ int option_command(char* token) {
 
     return PARSING_SUCCESSFUL;
 }
+
+// This function parses the .dc commands and registers its arguments
 
 int dc_command(char* token){
 
@@ -407,6 +424,7 @@ int dc_command(char* token){
     return PARSING_SUCCESSFUL;
 }
 
+// This function parses the .plot command
 int plot_command(char* token) {
 
     token = strtok(NULL, " \t\n\r");
@@ -426,7 +444,7 @@ int plot_command(char* token) {
     return PARSING_SUCCESSFUL;
 }
 
-// This function returns the number of nonzeros to be added for this component
+// This function returns the number of nonzeros to be added for the specified component
 int increment_nonzeros(char comp_type, char* positive_node, char* negative_node) {
 
     int node_is_ground = FALSE;

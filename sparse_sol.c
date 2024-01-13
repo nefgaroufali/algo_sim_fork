@@ -4,27 +4,28 @@
 #include "mna.h"
 #include "parse.h"
 #include "structs.h"
+#include "gsl.h"
 
 cs *sparse_A;
 cs *sparse_C;
 
 double *b_array_sparse = NULL;
-
+double *x_array_sparse = NULL;
 int sparse_m2_count=0;
-int N;
 
+// This function fills the sparse array A, which is in triplet form(see Timothy Davies book)
 void form_sparse() { 
 
     component* current = head;
     int nonzero_counter = 0;
-    N = nodes_n - 1 + m2;
-    printf("N is %d\n", N);
 
-    sparse_A = cs_spalloc(N, N, nonzeros,1,1);
-    create_b_array_for_sparse();
+    // Allocate the sparse A array
+    sparse_A = cs_spalloc(A_dim, A_dim, nonzeros,1,1);
+
+    // create vectors for x and b
+    create_sparse_vectors();
 
     // For each component of the circuit fill the sparse array
-    // Also increment the nonzero counter
 
     while (current != NULL) {
 
@@ -46,10 +47,20 @@ void form_sparse() {
 
     sparse_A->nz = nonzeros;
 
+    // Form the compressed-column array C
     sparse_C = cs_compress(sparse_A);
 
     cs_spfree(sparse_A);
+
+    // Remove the duplicates of the compressed-column array
     cs_dupl(sparse_C);
+
+    // We also create gsl b for iter solver
+    gsl_b = gsl_vector_alloc(A_dim);
+
+    // Copy the array b to a gsl vector, which will be used for sparse methods
+    double_to_gsl(gsl_b, b_array_sparse);
+
 
 }
 
@@ -201,16 +212,24 @@ void sparse_fill_with_l(component* current, int *nonzero_counter) {
     sparse_m2_count++;
 }
 
+// This function adds an element to the sparse array A
 void add_to_sparse_A(int k, int i, int j, double x) {
         sparse_A->i[k] = i;
         sparse_A->p[k] = j;
         sparse_A->x[k] = x;
 }
 
-void create_b_array_for_sparse() {
+// This function fills the vectors b and x, used in sparse operations
+void create_sparse_vectors() {
 
     // Allocate memory for the array of pointers to rows
-    b_array_sparse = (double*)calloc(N, sizeof(double));
+    b_array_sparse = (double*)calloc(A_dim, sizeof(double));
+    x_array_sparse = (double*)calloc(A_dim, sizeof(double));
+
+    if(x_array_sparse == NULL){
+        fprintf(stderr, "Memory allocation failed\n");
+        exit(1);
+    }
 
     // Check if memory allocation was successful
     if (b_array_sparse == NULL) {
@@ -219,6 +238,7 @@ void create_b_array_for_sparse() {
     }
 }
 
+// This function prints arrays A, b and x, used in sparse operations
 void print_sparse_arrays() {
 
     printf("\n *** Printing A array *** \n");
@@ -227,8 +247,25 @@ void print_sparse_arrays() {
 
     printf("\n *** Printing b array *** \n");
 
-    for (int k = 0; k < N; k++) {
+    for (int k = 0; k < A_dim; k++) {
         printf("%.2lf\t", b_array_sparse[k]);
     }
+
+    printf("\n *** Printing x array *** \n");
+
+    for (int l = 0; l < A_dim; l++) {
+        printf("%.2lf\t", x_array_sparse[l]);
+    }
+
+    printf("\n");
+}
+
+// This function only prints vector x
+void print_sparse_x() {
+
+    for (int l = 0; l < A_dim; l++) {
+        printf("%.2lf\t", x_array_sparse[l]);
+    }
+
     printf("\n");
 }

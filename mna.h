@@ -21,6 +21,4 @@ void fill_with_v(component* current);
 void fill_with_c(component* current);
 void fill_with_l(component* current);
 
-int count_nonzeros();
-
 #endif

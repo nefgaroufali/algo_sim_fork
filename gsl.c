@@ -2,17 +2,20 @@
 #include "iter_sol.h"
 #include "gsl.h"
 #include <stdio.h>
+#include <string.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_errno.h>
 #include "mna.h"
 #include "structs.h"
 #include "parse.h"
+#include "sparse_sol.h"
+#include "csparse.h"
+#include "time.h"
 
 gsl_matrix* gsl_A = NULL;
 gsl_vector *gsl_b = NULL;
 gsl_vector *gsl_x = NULL;
-
 
 FILE *filePointers[5] = {NULL};
 
@@ -20,10 +23,10 @@ int spd = FALSE;
 int *plot_node_indexes = NULL;
 int plot_node_count = 0;
 
-
 // This function copies the double array A made in mna.c, to a GSL array, to be used in the linear algebra routines
 // It also copies the elements of the b vector
 
+// This function cretes the gsl arrays A and b, and fills them
 void form_gsl_system() {
 
     int i,j;
@@ -101,8 +104,11 @@ void gslErrorHandler(const char *reason, const char *file, int line, int gsl_err
 
 void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value, char type) {
 
+
     gsl_vector *temp_gsl_x = gsl_vector_alloc(A_dim);
-    gsl_vector_memcpy(temp_gsl_x, gsl_x);   // for the iterative methods
+    gsl_vector_memcpy(temp_gsl_x, gsl_x);   // for the iterative methods, temp_gsl_x receives the value of the previous solution
+
+    // Solve the system based on the solver flag, generated during parsing
 
     if (solver_type == LU_SOL) {
         gsl_linalg_LU_solve(gsl_LU, gsl_p, temp_gsl_b, temp_gsl_x);
@@ -115,6 +121,18 @@ void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value, char type) 
     }
     else if (solver_type == BICG_SOL) {
         solve_bicg(temp_gsl_b, temp_gsl_x);
+    }
+    else if (solver_type == SPARSE_LU_SOL) {
+        solve_sparse_lu(temp_gsl_b, temp_gsl_x);
+    }
+    else if (solver_type == SPARSE_CHOL_SOL) {
+        solve_sparse_chol(temp_gsl_b, temp_gsl_x);
+    }
+    if (solver_type == SPARSE_CG_SOL) {
+        solve_sparse_cg(temp_gsl_b, temp_gsl_x);
+    }
+    else if (solver_type == SPARSE_BICG_SOL) {
+        solve_sparse_bicg(temp_gsl_b, temp_gsl_x);
     }
 
     int i;
@@ -129,14 +147,15 @@ void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value, char type) 
         plot_node_i = plot_node_indexes[i];
         b_vector_value = cur_value;
         x_vector_value = gsl_vector_get(temp_gsl_x, plot_node_i);
-
         add_to_plot_file(b_vector_value, x_vector_value, i);
 
     }
 
+    gsl_vector_memcpy(gsl_x, temp_gsl_x); // copy the value to gsl_x, so that it is the initial value for the next cg/bicg
     gsl_vector_free(temp_gsl_x);
 
 }
+
 
 // Adds the node to be plotted to a list of all the nodes to be plotted
 // IMPORTANT: These indexes start at 0.
@@ -165,8 +184,8 @@ void add_to_plot_file(double b_vector_value, double x_vector_value, int i) {
 
     // Check if the file corresponding to i is already open
     if (filePointers[i] == NULL) {
-        char filename[30];
-        snprintf(filename, sizeof(filename), "output/file_%d.txt", i);
+        char filename[60];
+        snprintf(filename, sizeof(filename), "output/%s_%d.txt", circuit_name, i);
 
         // Open the file in write mode inside the "output" subdirectory
         filePointers[i] = fopen(filename, "w");
@@ -185,8 +204,8 @@ void add_to_plot_file(double b_vector_value, double x_vector_value, int i) {
     fflush(filePointers[i]);
 
     // Code to generate the GNU Plot command to create the plot
-    char plot_command[100];
-    snprintf(plot_command, sizeof(plot_command), "set terminal png; set output 'output/file_%d.png'; plot 'output/file_%d.txt' with lines", i, i);
+    char plot_command[150];
+    snprintf(plot_command, sizeof(plot_command), "set terminal png; set output 'output/%s_%d.png'; plot 'output/%s_%d.txt' with lines", circuit_name, i, circuit_name, i);
 
     // Generate a temporary script file to run the GNU Plot commands
     FILE *gnuplotScript = fopen("plot_script.gnu", "w");
@@ -278,13 +297,18 @@ void dc_sweep() {
 
 }
 
-// This function solves the  DC system, with LU or Cholesky or CG or BICG
+
+// This function solves the  DC system,
 // Then writes the dc operating point in a .op file
 
 void solve_dc_system(int solver_type) {
 
-    // Allocate the x vector
+    clock_t t1, t2;
+    double time;
+
     gsl_x = gsl_vector_calloc(A_dim);   // fill it with zeros, useful for the iterative methods
+
+    t1 = clock();
 
     // Solve the system depending on the solver type
     if (solver_type == LU_SOL) {
@@ -299,14 +323,29 @@ void solve_dc_system(int solver_type) {
     else if (solver_type == BICG_SOL){
         solve_bicg(gsl_b, gsl_x);
     }
+    else if (solver_type == SPARSE_LU_SOL){
+        solve_sparse_lu(gsl_b, gsl_x);
+    }
+    else if (solver_type == SPARSE_CHOL_SOL){
+        solve_sparse_chol(gsl_b, gsl_x);
+    }
+    else if (solver_type == SPARSE_CG_SOL){
+        solve_sparse_cg(gsl_b, gsl_x);
+    }
+    else if (solver_type == SPARSE_BICG_SOL){
+        solve_sparse_bicg(gsl_b, gsl_x);
+    }
 
-    printf("Vector x:\n");
-    print_gsl_vector(gsl_x, A_dim);
-    printf("\n");
+    t2 = clock();
+    time = (double) (t2 - t1) / CLOCKS_PER_SEC;
+    printf("Completed in %f seconds\n", time);
 
     // Open the file in which the operating point will be printed
     FILE *op_file;
-    op_file = fopen("output/dc_solution.op", "w");
+    char op_file_name[40];
+
+    snprintf(op_file_name, sizeof(op_file_name), "%s%s%s", "output/", circuit_name, ".op");
+    op_file = fopen(op_file_name, "w");
 
     // Print the solution to the file
     // First n-1 elements are the voltages of the nodes
@@ -315,17 +354,39 @@ void solve_dc_system(int solver_type) {
     for (int i = 0, j=0; i < A_dim; i++) {
 
         if(i < nodes_n-1){
-            fprintf(op_file, "v(%s)   %.5lf\n", node_array[i+1], gsl_vector_get(gsl_x, i));    
+            fprintf(op_file, "%s   %.5lf\n", node_array[i+1], gsl_vector_get(gsl_x, i));    
         }
         else
         {
-            fprintf(op_file, "i(%s)   %.5lf\n", m2_array[j], gsl_vector_get(gsl_x, i));
+            fprintf(op_file, "%s   %.5lf\n", m2_array[j], gsl_vector_get(gsl_x, i));
             j++;
         }
-
     }
 
     fclose(op_file);
 
+}
+
+// This function converts a double to a gsl vector
+void double_to_gsl(gsl_vector *gsl_v, double* v) {
+
+    int i;
+
+    for (i=0; i<A_dim; i++) {
+        gsl_vector_set(gsl_v, i, v[i]);
+    }
 
 }
+
+// This function converts a gsl vector to a double 
+void gsl_to_double(gsl_vector *gsl_v, double* v) {
+
+    int i;
+
+    for (i=0; i<A_dim; i++) {
+        v[i] = gsl_vector_get(gsl_v, i);
+
+    }
+
+}
+

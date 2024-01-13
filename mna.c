@@ -10,7 +10,6 @@
 double* A_array = NULL;
 double* b_array = NULL;
 int m2_count=0;
-int A_dim;  // (n-1+m2)
 
 double* alloc_A_array() {
 
@@ -73,7 +72,6 @@ void create_arrays(){
 
         current = current->next;
     }
-    return;
 }
 
 // Component: R ---> Fill A1*G*A1t array
@@ -249,9 +247,8 @@ void free_b_array() {
     free(b_array);
 }
 
+// This function creates and fills the necessary arrays to solve the MNA system
 void create_equations(){
-
-    A_dim = nodes_n-1 + m2;    // A: (n-1+m2)(n-1+m2)
 
     alloc_A_array();
     alloc_b_array();
@@ -259,19 +256,4 @@ void create_equations(){
     //print_arrays();
 
     return;
-}
-
-int count_nonzeros() {
-
-    int nonzeros = 0;
-
-    for (int i = 0; i < (A_dim); i++) {
-        for (int j = 0; j < (A_dim); j++) {
-            if (A_array[i*A_dim + j] != 0) {
-                nonzeros++;
-            }
-        }
-    }
-
-    return nonzeros;
 }

@@ -32,8 +32,9 @@ extern double DC_arguments[3];  // The three arguments to .dc: Low, High, Step
 extern int sweep_flag; // When this flag is raised, do dc_sweep
 extern float itol; // tolerance as exit condition for iterative solver
 extern int nonzeros; // Number of nonzeros, used by sparse structures
-
-extern int A_dim;
+extern char circuit_name[30];   // Name of the circuit, based on the file name
+extern int spd_flag;    // A   flag that enables/disables SPD methods
+extern int A_dim;       // The dimension of the square A array, equals n-1+m2
 
 void number_of_lines(char *file_name);
 void parse(char *file_name);
