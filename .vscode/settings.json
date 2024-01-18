@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "direct_sol.h": "c",
+        "stdio.h": "c",
+        "csparse.h": "c"
+    }
+}
