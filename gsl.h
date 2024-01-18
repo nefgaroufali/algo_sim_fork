@@ -11,6 +11,7 @@
 extern gsl_matrix* gsl_A;
 extern gsl_vector* gsl_b;
 extern gsl_vector* gsl_x;
+extern gsl_matrix *gsl_C;
 
 extern int spd; // Flag that indicates if the system is SPD Or not (if Cholesky failed)
 
@@ -23,7 +24,7 @@ void form_gsl_system();
 void print_gsl_matrix(gsl_matrix *matrix, int dim);
 void print_gsl_vector(gsl_vector *vector, int dim);
 void free_gsl();
-void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value, char type);
+void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value);
 void add_to_plot_file(double b_vector_value, double x_vector_value, int i);
 
 void gslErrorHandler(const char *reason, const char *file, int line, int gsl_errno);

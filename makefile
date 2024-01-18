@@ -6,7 +6,7 @@ CC = gcc
 
 # Compiler flags
 
-CFLAGS = -Wall -g -std=c11 -O2
+CFLAGS = -Wall -g -std=c11 
 
 
 

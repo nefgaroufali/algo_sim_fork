@@ -84,6 +84,7 @@ void solve_cg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
 
 void solve_bicg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
 
+
     int max_iter = A_dim;   // A_dim = n
 
     gsl_vector *gsl_r = gsl_vector_alloc(A_dim);        // residual vector
@@ -125,8 +126,11 @@ void solve_bicg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
 
         gsl_blas_ddot(gsl_r_bicg, gsl_z, &rho);   // dot(r',z)
 
-        if (fabs(rho) < EPS) break;
+        if (fabs(rho) < EPS) {
 
+            break;
+        }
+        // SEE MATLAB!!
         if (i == 1) {
             gsl_vector_memcpy(gsl_p, gsl_z);    // p = z
             gsl_vector_memcpy(gsl_p_bicg, gsl_z_bicg);    // p' = z'
@@ -144,7 +148,9 @@ void solve_bicg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
 
         gsl_blas_ddot(gsl_p_bicg, gsl_q, &omega);   // omega = dot(p',q)
 
-        if (fabs(omega) < EPS) break;
+        if (fabs(omega) < EPS) {
+            break;
+        }
 
         alpha = rho/omega;
         
@@ -153,6 +159,7 @@ void solve_bicg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
         gsl_blas_daxpy(-alpha, gsl_q_bicg, gsl_r_bicg); // r' = r' - alpha*q'
 
         r_norm = gsl_blas_dnrm2(gsl_r); // norm of vector r
+
 
 
     }
@@ -208,7 +215,7 @@ void solve_sparse_cg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
     gsl_vector *gsl_p = gsl_vector_alloc(A_dim);        // vector p
     gsl_vector *gsl_q = gsl_vector_alloc(A_dim);        // vector q
 
-    cs_gaxpy_with_gsl_x(sparse_C, cur_gsl_x, gsl_Ax);   // Ax = A*x
+    cs_gaxpy_with_gsl_x(sparse_cc_A, cur_gsl_x, gsl_Ax);   // Ax = A*x
 
     gsl_vector_memcpy(gsl_r, cur_gsl_b);
     gsl_vector_sub(gsl_r, gsl_Ax);              // r = b - Ax
@@ -222,7 +229,7 @@ void solve_sparse_cg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
     double alpha;
     int i=0;
 
-    double *diag_a = find_diag_a(sparse_C); //used for preconditioner!
+    double *diag_a = find_diag_a(sparse_cc_A); //used for preconditioner!
 
     if (b_norm == 0) b_norm = 1;            // If the norm of b is 0, make it 1
 
@@ -248,7 +255,7 @@ void solve_sparse_cg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
         rho1 = rho;
 
         gsl_vector_set_zero(gsl_q); // initialize gsl_q to zero, necessary for the next axpy function
-        cs_gaxpy_with_gsl_x(sparse_C, gsl_p, gsl_q);  // q = A*p 
+        cs_gaxpy_with_gsl_x(sparse_cc_A, gsl_p, gsl_q);  // q = A*p 
 
         gsl_blas_ddot(gsl_p, gsl_q, &pq_dot);   // omega = dot(p',q)
 
@@ -286,7 +293,7 @@ void solve_sparse_bicg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
     gsl_vector *gsl_q = gsl_vector_alloc(A_dim);        // vector q
     gsl_vector *gsl_q_bicg = gsl_vector_alloc(A_dim);   // vector q'
 
-    cs_gaxpy_with_gsl_x(sparse_C, cur_gsl_x, gsl_Ax);   // Ax = A*x
+    cs_gaxpy_with_gsl_x(sparse_cc_A, cur_gsl_x, gsl_Ax);   // Ax = A*x
 
     gsl_vector_memcpy(gsl_r, cur_gsl_b);
     gsl_vector_sub(gsl_r, gsl_Ax);              // r = b - Ax
@@ -303,7 +310,7 @@ void solve_sparse_bicg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
     double alpha;
     int i = 0;
 
-    double *diag_a = find_diag_a(sparse_C); //used for preconditioner!
+    double *diag_a = find_diag_a(sparse_cc_A); //used for preconditioner!
 
     if (b_norm == 0) b_norm = 1;            // If the norm of b is 0, make it 1
 
@@ -334,9 +341,9 @@ void solve_sparse_bicg(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
         rho1 = rho;
 
         gsl_vector_set_zero(gsl_q); // initialize gsl_q to 0, necessary for the following axpy function
-        cs_gaxpy_with_gsl_x(sparse_C, gsl_p, gsl_q);  // q = A*p 
+        cs_gaxpy_with_gsl_x(sparse_cc_A, gsl_p, gsl_q);  // q = A*p 
 
-        cs_gaxpy_with_gsl_x_trans(sparse_C, gsl_p_bicg, gsl_q_bicg);  // q' = A(T)*p'
+        cs_gaxpy_with_gsl_x_trans(sparse_cc_A, gsl_p_bicg, gsl_q_bicg);  // q' = A(T)*p'
 
         gsl_blas_ddot(gsl_p_bicg, gsl_q, &omega);   // omega = dot(p',q)
 

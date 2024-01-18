@@ -3,7 +3,6 @@
 #include <string.h>
 #include <ctype.h>
 #include "parse.h"
-#include "structs.h"
 #include "gsl.h"
 #include "direct_sol.h"
 
@@ -22,8 +21,12 @@ int sweep_flag = 0;
 int solver_type = LU_SOL;
 double DC_arguments[3];
 float itol = 1e-3;
-int nonzeros = 0;
+int nonzeros_A = 0;
+int nonzeros_C = 0;
 int spd_flag_circuit = 1;
+double tran_time_step = 0;
+double tran_fin_time = 0;
+int tran_method = TR;
 
 char circuit_name[30];  // the name circuit taken from the file name
 
@@ -106,6 +109,9 @@ int parse_line(char* line) {
     char *negative_node = NULL;
     double value;
     int node_found;
+
+    transient_spec_type spec_type = NO_SPEC; //default
+    transient_spec* my_spec = NULL;
 
 
     // String 1: Type of circuit element & name
@@ -203,10 +209,146 @@ int parse_line(char* line) {
     // strtod converts the string to a float
     value = strtod(token, NULL);
 
-    // Add the component to the linked list
-    append_component(&head, &tail, comp_type, comp_name, positive_node, negative_node, value);
+    // String 5: (optional) Parse the type of math function (waveform)
+    token = strtok(NULL, " \t\r\n");
+    if (token != NULL) {
+        if (comp_type != 'v' && comp_type != 'i') {
+            printf("Error! Can only have transient specs at V or I component!\n");
+            return PARSING_ERROR;
+        }
 
-    nonzeros += increment_nonzeros(comp_type, positive_node, negative_node);    // count how many nonzeros should be added (for sparse methods)
+        // Parse the spec type, and check if it is valid
+        spec_type = parse_spec_type(str_tolower(token));
+
+        if (spec_type == PARSING_ERROR) {
+            printf("Invalid spec type!\n");
+            return PARSING_ERROR;
+        }
+
+
+        // Depending on the spec type, parse a specific number of arguments
+
+        if (spec_type == EXP_SPEC) {
+            exp_spec *my_exp_spec;
+            my_exp_spec = (exp_spec*) malloc(sizeof(exp_spec));
+
+            char *tokens[6];
+
+            for (int i=0; i<6; i++) {
+                tokens[i] = strtok(NULL, " \t\r\n");
+                if (tokens[i] == NULL) {
+                    return PARSING_ERROR;
+                }
+            }
+
+            my_exp_spec->i1 = strtod(tokens[0]+1, NULL);    // + 1 to ignore the parenthesis at [0]
+            my_exp_spec->i2 = strtod(tokens[1], NULL);
+            my_exp_spec->td1 = strtod(tokens[2], NULL);
+            my_exp_spec->tc1 = strtod(tokens[3], NULL);
+            my_exp_spec->td2 = strtod(tokens[4], NULL);
+            my_exp_spec->tc2 = strtod(tokens[5], NULL);
+
+            my_spec = (transient_spec *) my_exp_spec;
+
+        }
+
+        else if (spec_type == SIN_SPEC) {
+            sin_spec *my_sin_spec;
+            my_sin_spec = (sin_spec*) malloc(sizeof(sin_spec));
+
+            char *tokens[6];
+
+            for (int i=0; i<6; i++) {
+                tokens[i] = strtok(NULL, " \t\r\n");
+                if (tokens[i] == NULL) {
+                    return PARSING_ERROR;
+                }
+            }
+
+            my_sin_spec->i1 = strtod(tokens[0]+1, NULL);    // + 1 to ignore the parenthesis at [0]
+            my_sin_spec->ia = strtod(tokens[1], NULL);
+            my_sin_spec->fr = strtod(tokens[2], NULL);
+            my_sin_spec->td = strtod(tokens[3], NULL);
+            my_sin_spec->df = strtod(tokens[4], NULL);
+            my_sin_spec->ph = strtod(tokens[5], NULL);
+
+            my_spec = (transient_spec *) my_sin_spec;
+
+        }
+
+        else if (spec_type == PULSE_SPEC) {
+            pulse_spec *my_pulse_spec;
+            my_pulse_spec = (pulse_spec*) malloc(sizeof(pulse_spec));
+
+            char *tokens[7];
+
+            for (int i=0; i<7; i++) {
+                tokens[i] = strtok(NULL, " \t\r\n");
+                if (tokens[i] == NULL) {
+                    return PARSING_ERROR;
+                }
+            }
+
+            my_pulse_spec->i1 = strtod(tokens[0]+1, NULL);    // + 1 to ignore the parenthesis at [0]
+            my_pulse_spec->i2 = strtod(tokens[1], NULL);
+            my_pulse_spec->td = strtod(tokens[2], NULL);
+            my_pulse_spec->tr = strtod(tokens[3], NULL);
+            my_pulse_spec->tf = strtod(tokens[4], NULL);
+            my_pulse_spec->pw = strtod(tokens[5], NULL);
+            my_pulse_spec->per = strtod(tokens[6], NULL);
+
+            my_spec = (transient_spec *) my_pulse_spec;
+
+        }
+
+        // PWL always comes at pairs
+
+        else if (spec_type == PWL_SPEC) {
+            pwl_spec *my_pwl_spec;
+            my_pwl_spec = (pwl_spec*) malloc(sizeof(pwl_spec));
+            my_pwl_spec->pairs = 0;
+            my_pwl_spec->i = NULL;
+            my_pwl_spec->t = NULL;
+
+            char *token_t;
+            char *token_i;
+
+            while(1) {
+
+                // t
+                token_t = strtok(NULL, " \t\r\n");
+                if (token_t == NULL) {
+                    break;
+                }
+
+                // i
+                token_i = strtok(NULL, " \t\r\n");
+                if (token_i == NULL) {
+                    return PARSING_ERROR;
+                }
+
+                my_pwl_spec->pairs++;
+                my_pwl_spec->t = realloc(my_pwl_spec->t, my_pwl_spec->pairs * sizeof(double));
+                my_pwl_spec->i = realloc(my_pwl_spec->i, my_pwl_spec->pairs * sizeof(double));
+
+                my_pwl_spec->t[my_pwl_spec->pairs-1] = strtod(token_t+1, NULL);
+                my_pwl_spec->i[my_pwl_spec->pairs-1] = strtod(token_i, NULL);
+
+
+            }
+
+            my_spec = (transient_spec *) my_pwl_spec;
+
+        }
+
+        
+    }
+
+    // Add the component to the linked list
+    append_component(&head, &tail, comp_type, comp_name, positive_node, negative_node, value, spec_type, my_spec);
+
+    nonzeros_A += increment_nonzeros_A(comp_type, positive_node, negative_node);    // count how many nonzeros should be added in A (for sparse methods)
+    nonzeros_C += increment_nonzeros_C(comp_type, positive_node, negative_node);    // count how many nonzeros should be added in C (for sparse methods)
 
     return PARSING_SUCCESSFUL;
 
@@ -330,6 +472,12 @@ int parse_spice_command(char* token)
         parsing_result = plot_command(token);
     }
 
+    //.tran //
+    else if (strcmp(str_tolower(token), ".tran") == 0) {
+        parsing_result = tran_command(token);
+
+    }
+
     return parsing_result; //SUCCESSFUL or ERROR
 }
 
@@ -364,6 +512,9 @@ int option_command(char* token) {
         }
         else if (strncmp(str_tolower(token), "itol=", strlen("itol=")) == 0) {
             itol = strtof(token + strlen("itol="), NULL);
+        }
+        else if (strcmp(str_tolower(token), "method=be") == 0) {
+            tran_method = BE;
         }
     }
 
@@ -444,8 +595,8 @@ int plot_command(char* token) {
     return PARSING_SUCCESSFUL;
 }
 
-// This function returns the number of nonzeros to be added for the specified component
-int increment_nonzeros(char comp_type, char* positive_node, char* negative_node) {
+// This function returns the number of nonzeros to be added in A for the specified component
+int increment_nonzeros_A(char comp_type, char* positive_node, char* negative_node) {
 
     int node_is_ground = FALSE;
 
@@ -473,7 +624,68 @@ int increment_nonzeros(char comp_type, char* positive_node, char* negative_node)
     // If component is I or C, no element is added, so no nonzeros
     return 0;
 
+}
+
+// This function returns the number of nonzeros to be added in C (transient) for the specified component
+int increment_nonzeros_C(char comp_type, char* positive_node, char* negative_node) {
+
+    int node_is_ground = FALSE;
+
+    if (is_ground(positive_node) || is_ground(negative_node)) {
+        node_is_ground = TRUE;
+    }
+
+    if (comp_type == 'c') {
+        if (node_is_ground) {
+            return 1;
+        }
+        else {
+            return 4;
+        }
+    }
+    else if (comp_type == 'l') {
+        return 1;
+    }
+
+    // If component is V or R or I, no element is added in C, so no nonzeros
+    return 0;
 
 }
 
+// This function parses the type of transient spec. 
+// Returns PARSING_ERROR if not valid, or the type of spec if valid
+transient_spec_type parse_spec_type(char *token) {
+
+    if      (strcmp(token, "exp")   == 0) return EXP_SPEC;
+    else if (strcmp(token, "sin")   == 0) return SIN_SPEC;
+    else if (strcmp(token, "pulse") == 0) return PULSE_SPEC;
+    else if (strcmp(token, "pwl")   == 0) return PWL_SPEC;
+
+    // else if none of that
+    return PARSING_ERROR;
+
+}
+
+// This function parses the .tran command
+int tran_command(char *token) {
+
+    token = strtok(NULL, " \t\n\r");
+    if (token == NULL)
+    {
+        return PARSING_ERROR;
+    }
+
+    tran_time_step = strtod(token, NULL);
+
+    token = strtok(NULL, " \t\n\r");
+    if (token == NULL)
+    {
+        return PARSING_ERROR;
+    }
+
+    tran_fin_time = strtod(token, NULL);
+
+    return PARSING_SUCCESSFUL;
+
+}
 

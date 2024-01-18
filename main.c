@@ -103,6 +103,7 @@ int main(int argc, char* argv[]) {
             filePointers[i] = NULL;
         }
     }
+    printf("Method is %d\n", tran_method);
 
     printf("The program is finished!\n");
 
@@ -116,7 +117,7 @@ int main(int argc, char* argv[]) {
     free_plot_node();
     free(b_array_sparse);
     free(x_array_sparse);
-    cs_spfree(sparse_C);   
+    cs_spfree(sparse_cc_A);   
     
     return 0;
 

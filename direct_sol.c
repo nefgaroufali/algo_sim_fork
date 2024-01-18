@@ -69,8 +69,8 @@ void solve_sparse_lu(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x){
 
     // LU Solution
 
-    css_S = cs_sqr(sparse_C, 2, 0);
-    csn_N = cs_lu(sparse_C, css_S, 1);
+    css_S = cs_sqr(sparse_cc_A, 2, 0);
+    csn_N = cs_lu(sparse_cc_A, css_S, 1);
 
     cs_ipvec(A_dim, csn_N->Pinv, temp_b, x);
     cs_lsolve(csn_N->L, x);
@@ -98,8 +98,8 @@ void solve_sparse_chol(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x){
     // so that it can be used by the cs functions
     gsl_to_double(cur_gsl_b, temp_b);
 
-    css_S = cs_schol(sparse_C, 1);
-    csn_N = cs_chol(sparse_C, css_S);
+    css_S = cs_schol(sparse_cc_A, 1);
+    csn_N = cs_chol(sparse_cc_A, css_S);
 
     cs_ipvec(A_dim, css_S->Pinv, temp_b, x);
     cs_lsolve(csn_N->L, x);

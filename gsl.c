@@ -15,6 +15,7 @@
 
 gsl_matrix* gsl_A = NULL;
 gsl_vector *gsl_b = NULL;
+gsl_matrix *gsl_C = NULL;
 gsl_vector *gsl_x = NULL;
 
 FILE *filePointers[5] = {NULL};
@@ -26,7 +27,7 @@ int plot_node_count = 0;
 // This function copies the double array A made in mna.c, to a GSL array, to be used in the linear algebra routines
 // It also copies the elements of the b vector
 
-// This function cretes the gsl arrays A and b, and fills them
+// This function cretes the gsl arrays A and b and C, and fills them
 void form_gsl_system() {
 
     int i,j;
@@ -34,12 +35,14 @@ void form_gsl_system() {
 
     gsl_A = gsl_matrix_alloc(A_dim, A_dim);
     gsl_b = gsl_vector_alloc(A_dim);
+    gsl_C = gsl_matrix_alloc(A_dim, A_dim);
 
-    // Copying each element of A to the respective position of the GSL array
+    // Copying each element of A and C to the respective position of the GSL array
 
     for (i=0; i<A_dim; i++) {
         for (j=0; j<A_dim; j++) {
             gsl_matrix_set(gsl_A, i, j, A_array[i*A_dim + j]);
+            gsl_matrix_set(gsl_C, i, j, C_array[i*A_dim + j]);
         }
     }
 
@@ -86,6 +89,7 @@ void free_gsl() {
     gsl_vector_free(gsl_x);
     gsl_vector_free(gsl_b);
     gsl_matrix_free(gsl_A);
+    gsl_matrix_free(gsl_C);
     gsl_matrix_free(gsl_LU);
     gsl_matrix_free(gsl_chol);
     gsl_permutation_free(gsl_p);
@@ -102,11 +106,17 @@ void gslErrorHandler(const char *reason, const char *file, int line, int gsl_err
 // This function solves the linear system with the altered b vector
 // Then prints the value of each plot node in a separate file, that corresponds to each different value of the sweep component
 
-void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value, char type) {
+void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value) {
+
+    gsl_vector *temp_gsl_x;
 
 
-    gsl_vector *temp_gsl_x = gsl_vector_alloc(A_dim);
-    gsl_vector_memcpy(temp_gsl_x, gsl_x);   // for the iterative methods, temp_gsl_x receives the value of the previous solution
+    temp_gsl_x = gsl_vector_calloc(A_dim);
+
+
+    //gsl_vector_memcpy(temp_gsl_x, gsl_x);   // for the iterative methods, temp_gsl_x receives the value of the previous solution
+
+
 
     // Solve the system based on the solver flag, generated during parsing
 
@@ -151,7 +161,7 @@ void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value, char type) 
 
     }
 
-    gsl_vector_memcpy(gsl_x, temp_gsl_x); // copy the value to gsl_x, so that it is the initial value for the next cg/bicg
+    //gsl_vector_memcpy(gsl_x, temp_gsl_x); // copy the value to gsl_x, so that it is the initial value for the next cg/bicg
     gsl_vector_free(temp_gsl_x);
 
 }
@@ -270,7 +280,8 @@ void dc_sweep() {
                 gsl_vector_set(temp_gsl_b, neg_sweep_node_i, cur_value);
             }
 
-            solve_dc_sweep_system(temp_gsl_b, cur_value, 'i'); 
+            solve_dc_sweep_system(temp_gsl_b, cur_value); 
+
             cur_value = cur_value + step;
         } while (cur_value <= high);
 
@@ -287,8 +298,7 @@ void dc_sweep() {
         cur_value = low;
         do {
             gsl_vector_set(temp_gsl_b, sweep_node_i, cur_value); 
-
-            solve_dc_sweep_system(temp_gsl_b, cur_value, 'v'); 
+            solve_dc_sweep_system(temp_gsl_b, cur_value); 
             cur_value = cur_value + step;
         } while (cur_value <= high);
     }
