@@ -10,24 +10,29 @@
 #include "iter_sol.h"
 #include "sparse_sol.h"
 
+int A_dim;
+
 int main(int argc, char* argv[]) {
 
-    char file_name[40];
+    char file_path[40];
 
     // If there is no argument (or multiple arguments) exit
     if (argc!=2) {
         printf("Error! No file specified. Use ./spice_sim <file_name>\n");
         return 0;
     }
+    
+    strcpy(file_path, argv[1]);
 
-    strcpy(file_name, argv[1]);
-    parse(file_name);
+    if (strncmp(file_path, "input/", 6) != 0) {
+        printf("Error! The input file must be in directory input!\n");
+        return 0;
+    }
 
-    // printf("DC Parameters: %f %f %f\n", DC_arguments[0], DC_arguments[1], DC_arguments[2]);
+    parse(file_path);
+    A_dim = nodes_n-1 + m2;    // A: (n-1+m2)(n-1+m2)
 
-    // print_hash_table(&node_hash_table);
-    // print_comp_list(head);
-
+    printf("Solver type is %d\n", solver_type);
     switch (solver_type) {
         case LU_SOL:
             create_equations();
@@ -59,27 +64,26 @@ int main(int argc, char* argv[]) {
 
         case SPARSE_LU_SOL:
             form_sparse();
+            printf("Sparse system formed\n");
             solve_dc_system(SPARSE_LU_SOL);
-            // Print the solver type for the extra cases
-            printf("Solver Type: %d\n", solver_type);
             break;
+
         case SPARSE_CHOL_SOL:
             form_sparse();
+            printf("Sparse system formed\n");
             solve_dc_system(SPARSE_CHOL_SOL);
-            // Print the solver type for the extra cases
-            printf("Solver Type: %d\n", solver_type);
             break;
+
         case SPARSE_CG_SOL:
             form_sparse();
+            printf("Sparse system formed\n");
             solve_dc_system(SPARSE_CG_SOL);
-            // Print the solver type for the extra cases
-            printf("Solver Type: %d\n", solver_type);
             break;
+
         case SPARSE_BICG_SOL:
             form_sparse();
+            printf("Sparse system formed\n");
             solve_dc_system(SPARSE_BICG_SOL);
-            // Print the solver type for the extra cases
-            printf("Solver Type: %d\n", solver_type);
             break;
 
         default:
@@ -87,15 +91,8 @@ int main(int argc, char* argv[]) {
             break;
     }
 
-    print_arrays();
-    print_sparse_arrays();
     if (sweep_flag == TRUE) {
-        if(solver_type == SPARSE_LU_SOL || solver_type == SPARSE_CHOL_SOL || solver_type == SPARSE_CG_SOL || solver_type == SPARSE_BICG_SOL){
-            dc_sweep_sparse();
-        }
-        else{
-            dc_sweep();
-        }
+        dc_sweep();
     }
 
 
@@ -106,6 +103,9 @@ int main(int argc, char* argv[]) {
             filePointers[i] = NULL;
         }
     }
+    printf("Method is %d\n", tran_method);
+
+    printf("The program is finished!\n");
 
     free_gsl();
     free_hash_table(&node_hash_table);
@@ -114,7 +114,10 @@ int main(int argc, char* argv[]) {
     free_b_array();
     free_node_array();
     free_m2_array();
-    free_plot_node();   
+    free_plot_node();
+    free(b_array_sparse);
+    free(x_array_sparse);
+    cs_spfree(sparse_cc_A);   
     
     return 0;
 

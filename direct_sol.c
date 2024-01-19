@@ -8,7 +8,9 @@
 #include "structs.h"
 #include "parse.h"
 #include "sparse_sol.h"
-#include "csparse.h"
+
+#include <time.h>
+
 
 gsl_matrix* gsl_LU = NULL;
 gsl_matrix* gsl_chol = NULL;
@@ -54,45 +56,62 @@ void form_chol() {
 
 }
 
-void solve_sparse_lu(){
+// This function solves the LU system using sparse methods
+void solve_sparse_lu(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x){
 
-    double *x;
+    double* temp_b = malloc(A_dim*sizeof(double *));
+    double* temp_x = malloc(A_dim*sizeof(double *));
+    double *x = (double *) malloc(sizeof(double)* A_dim);
 
-    css_S = cs_sqr(sparse_C, 2, 0);
-    csn_N = cs_lu(sparse_C, css_S, 1);
+    // The function inputs are gsl vectors, so the b vector needs to be converted to double
+    // so that it can be used by the cs functions
+    gsl_to_double(cur_gsl_b, temp_b);
 
-    x = (double *) malloc(sizeof(double)* N);
-    if (x == NULL) {
-        printf("Error. Memory allocation problems. Exiting..\n");
-        exit(EXIT_FAILURE);
-    }
+    // LU Solution
 
-    cs_ipvec(N, csn_N->Pinv, b_array_sparse, x);
+    css_S = cs_sqr(sparse_cc_A, 2, 0);
+    csn_N = cs_lu(sparse_cc_A, css_S, 1);
+
+    cs_ipvec(A_dim, csn_N->Pinv, temp_b, x);
     cs_lsolve(csn_N->L, x);
     cs_usolve(csn_N->U, x);
-    cs_ipvec(N, css_S->Q, x, x_array_sparse);
+    cs_ipvec(A_dim, css_S->Q, x, temp_x);
 
+    // The vector needs to be in gsl form, so it must be converted
+    double_to_gsl(cur_gsl_x, temp_x);
+
+    cs_sfree(css_S);
+    cs_nfree(csn_N);
     free(x);
+    free(temp_b);
+    free(temp_x);
 }
 
+// This function solves the system with the Cholesky algorithm using sparse methods
+void solve_sparse_chol(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x){
 
-void solve_sparse_chol(){
+    double* temp_b = malloc(A_dim*sizeof(double *));
+    double* temp_x = malloc(A_dim*sizeof(double *));
+    double * x= (double *) malloc(sizeof(double)*A_dim);
 
-    double *x;
+    // The function inputs are gsl vectors, so the b vector needs to be converted to double
+    // so that it can be used by the cs functions
+    gsl_to_double(cur_gsl_b, temp_b);
 
-    css_S = cs_schol(sparse_C, 1);
-    csn_N = cs_chol(sparse_C, css_S);
+    css_S = cs_schol(sparse_cc_A, 1);
+    csn_N = cs_chol(sparse_cc_A, css_S);
 
-    x = (double *) malloc(sizeof(double)*N);
-    if (x == NULL) {
-        printf("Error. Memory allocation problems. Exiting..\n");
-        exit(EXIT_FAILURE);
-    }
-
-    cs_ipvec(N, css_S->Pinv, b_array_sparse, x);
+    cs_ipvec(A_dim, css_S->Pinv, temp_b, x);
     cs_lsolve(csn_N->L, x);
     cs_ltsolve(csn_N->L, x);
-    cs_pvec(N, css_S->Pinv, x, x_array_sparse);
+    cs_pvec(A_dim, css_S->Pinv, x, temp_x);
 
+    // The vector needs to be in gsl form, so it must be converted
+    double_to_gsl(cur_gsl_x, temp_x);
+
+    cs_sfree(css_S);
+    cs_nfree(csn_N);
     free(x);
+    free(temp_b);
+    free(temp_x);
 }
