@@ -13,4 +13,6 @@ void form_chol();
 void solve_sparse_lu(gsl_vector* cur_gsl_b, gsl_vector *cur_gsl_x);
 void solve_sparse_chol(gsl_vector* cur_gsl_b, gsl_vector *cur_gsl_x);
 
+void solve_LU_with_args(gsl_matrix *gsl_A, gsl_vector *gsl_x, gsl_vector *gsl_b);
+
 #endif

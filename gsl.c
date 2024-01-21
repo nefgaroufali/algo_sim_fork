@@ -12,6 +12,7 @@
 #include "sparse_sol.h"
 #include "csparse.h"
 #include "time.h"
+#include "transient.h"
 
 gsl_matrix* gsl_A = NULL;
 gsl_vector *gsl_b = NULL;
@@ -110,13 +111,9 @@ void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value) {
 
     gsl_vector *temp_gsl_x;
 
-
     temp_gsl_x = gsl_vector_calloc(A_dim);
 
-
     //gsl_vector_memcpy(temp_gsl_x, gsl_x);   // for the iterative methods, temp_gsl_x receives the value of the previous solution
-
-
 
     // Solve the system based on the solver flag, generated during parsing
 
@@ -229,11 +226,11 @@ void add_to_plot_file(double b_vector_value, double x_vector_value, int i) {
     fclose(gnuplotScript);
     
 
-    // // // Execute GNU Plot using the script file
-    // system("gnuplot plot_script.gnu");
+    // // Execute GNU Plot using the script file
+    system("gnuplot plot_script.gnu");
 
-    // // // Clean up: remove the temporary script file
-    // remove("plot_script.gnu");
+    // // Clean up: remove the temporary script file
+    remove("plot_script.gnu");
 }
 
 // This function frees the memory occupied by the plot node indexes
@@ -307,6 +304,91 @@ void dc_sweep() {
 
 }
 
+// This function performs tran sweep: It solves the Ax =b system for all different times defined
+void tran_sweep() {
+
+    gsl_vector *temp_gsl_b = gsl_vector_alloc(A_dim);
+    gsl_vector *prev_gsl_x = gsl_vector_alloc(A_dim);
+    gsl_vector *gsl_Cx = gsl_vector_alloc(A_dim);
+    gsl_vector *curr_gsl_x = gsl_vector_alloc(A_dim);
+
+    gsl_vector_memcpy(temp_gsl_b, gsl_b);
+    gsl_vector_memcpy(prev_gsl_x, gsl_x); // the dc solution
+
+    // Step 1: Get the transient components and store their pointers
+
+    component **tran_components = NULL;
+    component *curr = head;
+    int tran_components_size=0;
+
+    // print_gsl_matrix(gsl_A, A_dim);
+    // print_gsl_matrix(gsl_C, A_dim);
+    // print_gsl_vector(temp_gsl_b, A_dim);
+
+    while (curr != NULL) {
+        if (curr->spec_type != NO_SPEC) {
+
+            // Allocate memory for the new pointer
+            component** newPointer = (component**) malloc(sizeof(component*));
+            if (newPointer == NULL) {
+                // Handle memory allocation failure
+                exit(1);
+            }
+
+            // Add the pointer to the dynamic array
+            tran_components = (component**) realloc(tran_components, (tran_components_size + 1) * sizeof(component*));
+            if (tran_components == NULL) {
+                // Handle memory reallocation failure
+                exit(1);
+            }
+
+            // Add the pointer to the current component
+            tran_components[tran_components_size] = curr;
+
+            // Increment the size
+            tran_components_size++;
+        }
+
+        // Move to the next component in the linked list
+        curr = curr->next;
+    }
+
+    // Step 2: Create the A matrix 
+
+    if (tran_method == BE) {
+
+        // ---------- A ---------- // 
+
+        // a) Scale array C with 1/timestep. This destroys array C!
+        gsl_matrix_scale(gsl_C, 1/tran_time_step);
+
+        // b) Create G+C/h
+        gsl_matrix_add(gsl_A, gsl_C); //gsl_A == G+C/h
+
+    }
+
+    // Step 3: For every time, create the b vector and call the matching solver
+    double t;
+
+    for (t=0+tran_time_step; t<=tran_fin_time; t=t+tran_time_step) {
+
+        // Create 1/h*Cx(tk-1)
+        gsl_blas_dgemv(CblasNoTrans, 1.0, gsl_C, prev_gsl_x, 0.0, gsl_Cx);
+
+        // Create e(tk)
+        create_BE_b_vector(temp_gsl_b, tran_components, tran_components_size, t);
+
+        // b vector is e(tk) + 1/h*Cx(tk-1)
+        gsl_vector_add(temp_gsl_b, gsl_Cx);
+
+        // Solve the system
+        solve_tran_sweep_system(temp_gsl_b, gsl_A, curr_gsl_x, t);
+
+        // Current x becomes previous x
+        gsl_vector_memcpy(prev_gsl_x, curr_gsl_x);
+
+    }
+}
 
 // This function solves the  DC system,
 // Then writes the dc operating point in a .op file
@@ -364,11 +446,11 @@ void solve_dc_system(int solver_type) {
     for (int i = 0, j=0; i < A_dim; i++) {
 
         if(i < nodes_n-1){
-            fprintf(op_file, "%s   %.5lf\n", node_array[i+1], gsl_vector_get(gsl_x, i));    
+            fprintf(op_file, "%s\t\t%.5e\n", node_array[i+1], gsl_vector_get(gsl_x, i));    
         }
         else
         {
-            fprintf(op_file, "%s   %.5lf\n", m2_array[j], gsl_vector_get(gsl_x, i));
+            fprintf(op_file, "%s\t\t%.5e\n", m2_array[j], gsl_vector_get(gsl_x, i));
             j++;
         }
     }
@@ -400,3 +482,84 @@ void gsl_to_double(gsl_vector *gsl_v, double* v) {
 
 }
 
+// This function returns the gsl_vector to be used by BE method, based on the current time
+
+void create_BE_b_vector(gsl_vector *temp_gsl_b, component **tran_components, int tran_components_size, double t) {
+
+    component *curr = NULL;
+    int sweep_node_i, pos_sweep_node_i, neg_sweep_node_i;
+    double cur_value;
+
+    // create e(tk)
+    for (int i=0; i<tran_components_size; i++) {
+
+        curr = tran_components[i];
+        cur_value = get_comp_transient_val(curr, t);
+
+        if (curr->comp_type == 'i') {
+            pos_sweep_node_i = find_hash_node(&node_hash_table, curr->positive_node) - 1; // -1 because 0 is ground
+            neg_sweep_node_i = find_hash_node(&node_hash_table, curr->negative_node) - 1;
+
+            if (pos_sweep_node_i != -1) {
+                gsl_vector_set(temp_gsl_b, pos_sweep_node_i, -cur_value);
+            }
+            if (neg_sweep_node_i != -1) {
+                gsl_vector_set(temp_gsl_b, neg_sweep_node_i, cur_value);
+            }
+        }
+
+        else if (curr->comp_type == 'v') {
+            sweep_node_i = nodes_n-1 +curr->m2_i;
+            gsl_vector_set(temp_gsl_b, sweep_node_i, cur_value); 
+        }
+
+    }
+
+
+}
+
+void solve_tran_sweep_system(gsl_vector *temp_gsl_b, gsl_matrix* gsl_A, gsl_vector *curr_gsl_x, double t) {
+
+    // Solve the system based on the solver flag, generated during parsing
+
+    if (solver_type == LU_SOL) {
+        solve_LU_with_args(gsl_A, curr_gsl_x, temp_gsl_b);
+    }
+    else if (solver_type == CHOL_SOL) {
+        gsl_linalg_cholesky_solve(gsl_A, temp_gsl_b, curr_gsl_x);
+    }
+    // else if (solver_type == CG_SOL) {
+    //     solve_cg(temp_gsl_b, temp_gsl_x);
+    // }
+    // else if (solver_type == BICG_SOL) {
+    //     solve_bicg(temp_gsl_b, temp_gsl_x);
+    // }
+    // else if (solver_type == SPARSE_LU_SOL) {
+    //     solve_sparse_lu(temp_gsl_b, temp_gsl_x);
+    // }
+    // else if (solver_type == SPARSE_CHOL_SOL) {
+    //     solve_sparse_chol(temp_gsl_b, temp_gsl_x);
+    // }
+    // if (solver_type == SPARSE_CG_SOL) {
+    //     solve_sparse_cg(temp_gsl_b, temp_gsl_x);
+    // }
+    // else if (solver_type == SPARSE_BICG_SOL) {
+    //     solve_sparse_bicg(temp_gsl_b, temp_gsl_x);
+    // }
+
+    int i;
+    int plot_node_i;
+    double x_vector_value;
+
+    // Plot_node_i: The index of the node(s) that are to be plotted
+    // Sweep_node_i: The index of the node whose value in the b vector changes
+
+    // Get the values that will be printed to the files, then call add_to_plot_file
+    for (i = 0; i < plot_node_count; i++) {
+        plot_node_i = plot_node_indexes[i];
+        x_vector_value = gsl_vector_get(curr_gsl_x, plot_node_i);
+        add_to_plot_file(t, x_vector_value, i);
+
+    }
+
+}

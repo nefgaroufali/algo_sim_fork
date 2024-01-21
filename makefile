@@ -6,7 +6,7 @@ CC = gcc
 
 # Compiler flags
 
-CFLAGS = -Wall -g -std=c11 
+CFLAGS = -Wall -g -std=c11
 
 
 
@@ -24,7 +24,7 @@ LIBS = -L/home/makaragiannis/gsl/lib -lgsl -lgslcblas -lm
 
 # Source files
 
-SRC = main.c parse.c structs.c mna.c direct_sol.c iter_sol.c gsl.c csparse.c sparse_sol.c
+SRC = main.c parse.c structs.c mna.c direct_sol.c iter_sol.c gsl.c csparse.c sparse_sol.c transient.c
 
 
 
