@@ -17,7 +17,8 @@ int m2 = 0;
 int m2_i = 0;
 int hash_table_size = 0;
 int lines = 0;
-int sweep_flag = 0;
+int dc_sweep_flag = 0;
+int tran_sweep_flag = 0;
 int solver_type = LU_SOL;
 double DC_arguments[3];
 float itol = 1e-3;
@@ -571,7 +572,7 @@ int dc_command(char* token){
             DC_arguments[i] = atof(token);
         }
     }
-    sweep_flag = 1;
+    dc_sweep_flag = 1;
     return PARSING_SUCCESSFUL;
 }
 
@@ -685,7 +686,8 @@ int tran_command(char *token) {
 
     tran_fin_time = strtod(token, NULL);
 
-    return PARSING_SUCCESSFUL;
+    tran_sweep_flag = 1;
 
+    return PARSING_SUCCESSFUL;
 }
 

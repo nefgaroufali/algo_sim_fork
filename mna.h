@@ -2,6 +2,7 @@
 #define MNA_H
 
 #include "structs.h"
+
 extern double* A_array; // The square matrix A we want to fill
 extern double* b_array; // The array b we want to fill
 extern double* C_array; // Square matrix C, used in transient analysis

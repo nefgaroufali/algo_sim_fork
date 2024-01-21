@@ -91,8 +91,11 @@ int main(int argc, char* argv[]) {
             break;
     }
 
-    if (sweep_flag == TRUE) {
+    if (dc_sweep_flag == TRUE) {
         dc_sweep();
+    }
+    if (tran_sweep_flag == TRUE) {
+        tran_sweep();
     }
 
 
@@ -103,8 +106,6 @@ int main(int argc, char* argv[]) {
             filePointers[i] = NULL;
         }
     }
-    printf("Method is %d\n", tran_method);
-
     printf("The program is finished!\n");
 
     free_gsl();
