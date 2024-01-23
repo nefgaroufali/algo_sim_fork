@@ -12,7 +12,7 @@
 #include "sparse_sol.h"
 #include "csparse.h"
 #include "time.h"
-#include <math.h>
+#include "transient.h"
 
 gsl_matrix* gsl_A = NULL;
 gsl_vector *gsl_b = NULL;
@@ -111,13 +111,9 @@ void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value) {
 
     gsl_vector *temp_gsl_x;
 
-
     temp_gsl_x = gsl_vector_calloc(A_dim);
 
-
     //gsl_vector_memcpy(temp_gsl_x, gsl_x);   // for the iterative methods, temp_gsl_x receives the value of the previous solution
-
-
 
     // Solve the system based on the solver flag, generated during parsing
 
@@ -230,11 +226,11 @@ void add_to_plot_file(double b_vector_value, double x_vector_value, int i) {
     fclose(gnuplotScript);
     
 
-    // // // Execute GNU Plot using the script file
-    // system("gnuplot plot_script.gnu");
+    // // Execute GNU Plot using the script file
+    system("gnuplot plot_script.gnu");
 
-    // // // Clean up: remove the temporary script file
-    // remove("plot_script.gnu");
+    // // Clean up: remove the temporary script file
+    remove("plot_script.gnu");
 }
 
 // This function frees the memory occupied by the plot node indexes
@@ -308,6 +304,143 @@ void dc_sweep() {
 
 }
 
+// This function performs tran sweep: It solves the Ax =b system for all different times defined
+void tran_sweep() {
+
+    gsl_vector *temp_gsl_b = gsl_vector_alloc(A_dim);
+    gsl_vector *prev_gsl_x = gsl_vector_alloc(A_dim);
+    gsl_vector *gsl_Cx = gsl_vector_alloc(A_dim);
+    gsl_matrix *gsl_A2 = gsl_matrix_alloc(A_dim, A_dim);
+    gsl_vector *curr_gsl_x = gsl_vector_alloc(A_dim);
+    
+    gsl_vector *gsl_A2x = gsl_vector_alloc(A_dim);
+
+
+    gsl_vector_memcpy(temp_gsl_b, gsl_b);
+    gsl_vector_memcpy(prev_gsl_x, gsl_x); // the dc solution
+
+    // Step 1: Get the transient components and store their pointers
+
+    component **tran_components = NULL;
+    component *curr = head;
+    int tran_components_size=0;
+
+    // print_gsl_matrix(gsl_A, A_dim);
+    // print_gsl_matrix(gsl_C, A_dim);
+    // print_gsl_vector(temp_gsl_b, A_dim);
+
+    while (curr != NULL) {
+        if (curr->spec_type != NO_SPEC) {
+
+            // Allocate memory for the new pointer
+            component** newPointer = (component**) malloc(sizeof(component*));
+            if (newPointer == NULL) {
+                // Handle memory allocation failure
+                exit(1);
+            }
+
+            // Add the pointer to the dynamic array
+            tran_components = (component**) realloc(tran_components, (tran_components_size + 1) * sizeof(component*));
+            if (tran_components == NULL) {
+                // Handle memory reallocation failure
+                exit(1);
+            }
+
+            // Add the pointer to the current component
+            tran_components[tran_components_size] = curr;
+
+            // Increment the size
+            tran_components_size++;
+        }
+
+        // Move to the next component in the linked list
+        curr = curr->next;
+    }
+
+    // Step 2: Create the A matrix 
+
+    if (tran_method == BE) {
+
+        // ---------- A ---------- // 
+
+        // a) Scale array C with 1/timestep. This destroys array C!
+        gsl_matrix_scale(gsl_C, 1/tran_time_step);
+
+        // b) Create G+C/h
+        gsl_matrix_add(gsl_A, gsl_C); //gsl_A == G+C/h
+
+    
+
+        // Step 3: For every time, create the b vector and call the matching solver
+        double t;
+
+        for (t=0+tran_time_step; t<=tran_fin_time; t=t+tran_time_step) {
+
+            // Create 1/h*Cx(tk-1)
+            gsl_blas_dgemv(CblasNoTrans, 1.0, gsl_C, prev_gsl_x, 0.0, gsl_Cx);
+
+            // Create e(tk)
+            create_BE_b_vector(temp_gsl_b, tran_components, tran_components_size, t);
+
+            // b vector is e(tk) + 1/h*Cx(tk-1)
+            gsl_vector_add(temp_gsl_b, gsl_Cx);
+
+            // Solve the system
+            solve_tran_sweep_system(temp_gsl_b, gsl_A, curr_gsl_x, t);
+
+            // Current x becomes previous x
+            gsl_vector_memcpy(prev_gsl_x, curr_gsl_x);
+
+        }
+    }
+    else{
+        // ---------- A ---------- // 
+
+        gsl_matrix_memcpy(gsl_A2, gsl_A);
+        gsl_vector *prev_temp_gsl_b = gsl_vector_alloc(A_dim);
+
+        // a) Scale array C with 1/timestep. This destroys array C!
+        gsl_matrix_scale(gsl_C, 2/tran_time_step);
+
+        // b) Create G+C/h
+        gsl_matrix_add(gsl_A, gsl_C); //gsl_A == G+2C/h
+
+        // c) Create G-C/h
+        gsl_matrix_sub(gsl_A2, gsl_C); //gsl_A2 == G-2C/h
+
+        // d) create e(tk-1)
+        gsl_vector_memcpy(prev_temp_gsl_b, temp_gsl_b);
+    
+
+        // Step 3: For every time, create the b vector and call the matching solver
+        double t;
+
+        for (t=0+tran_time_step; t<=tran_fin_time; t=t+tran_time_step) {
+
+            // Create (G-2C/h)*x(tk-1)
+            gsl_blas_dgemv(CblasNoTrans, 1.0, gsl_A2, prev_gsl_x, 0.0, gsl_A2x);
+
+            // Create e(tk)
+            create_BE_b_vector(temp_gsl_b, tran_components, tran_components_size, t);
+
+            // Create e(tk-1) - (G-2C/h)*x(tk-1)
+            gsl_vector_sub(prev_temp_gsl_b, gsl_A2x);
+
+            // Create e(tk) + e(tk-1) - (G-2C/h)*x(tk-1)
+            gsl_vector_add(temp_gsl_b, prev_temp_gsl_b);
+
+            // Solve the system
+            solve_tran_sweep_system(temp_gsl_b, gsl_A, curr_gsl_x, t);
+
+            // Current x becomes previous x
+            gsl_vector_memcpy(prev_gsl_x, curr_gsl_x);
+
+            // Current e becomes previous e
+            gsl_vector_memcpy(prev_temp_gsl_b, temp_gsl_b);
+        }
+
+    }
+}
 
 // This function solves the  DC system,
 // Then writes the dc operating point in a .op file
@@ -401,142 +534,84 @@ void gsl_to_double(gsl_vector *gsl_v, double* v) {
 
 }
 
+// This function returns the gsl_vector to be used by BE method, based on the current time
 
-// get the value of the exp transient function at time t
-double get_exp_val(exp_spec *data, double t) {
-	double res;
+void create_BE_b_vector(gsl_vector *temp_gsl_b, component **tran_components, int tran_components_size, double t) {
 
-    // negative time -> return zero
-	if (t < 0) {
-		printf("Transient Spec Function: Got negative time. Returning zero.\n");
-		res = 0.0;
-	}
-    // t < td1
-	else if (t < data->td1) {
-		res = data->i1;
-	}
-    // td1 < t < td2
-	else if (t < data->td2) {
-		res = data->i1 + (data->i2 - data->i1)*(1.0 - exp(-1*(t - data->td1)/data->tc1));
-	}
-    // t > td2
-	else {
-		res = data->i1 + (data->i2 - data->i1)*(exp(-1*(t- data->td2)/data->tc2) - exp(-1*(t - data->td1)/data->tc1));
-	}
-	return res;
+    component *curr = NULL;
+    int sweep_node_i, pos_sweep_node_i, neg_sweep_node_i;
+    double cur_value;
+
+    // create e(tk)
+    for (int i=0; i<tran_components_size; i++) {
+
+        curr = tran_components[i];
+        cur_value = get_comp_transient_val(curr, t);
+
+        if (curr->comp_type == 'i') {
+            pos_sweep_node_i = find_hash_node(&node_hash_table, curr->positive_node) - 1; // -1 because 0 is ground
+            neg_sweep_node_i = find_hash_node(&node_hash_table, curr->negative_node) - 1;
+
+            if (pos_sweep_node_i != -1) {
+                gsl_vector_set(temp_gsl_b, pos_sweep_node_i, -cur_value);
+            }
+            if (neg_sweep_node_i != -1) {
+                gsl_vector_set(temp_gsl_b, neg_sweep_node_i, cur_value);
+            }
+        }
+
+        else if (curr->comp_type == 'v') {
+            sweep_node_i = nodes_n-1 +curr->m2_i;
+            gsl_vector_set(temp_gsl_b, sweep_node_i, cur_value); 
+        }
+
+    }
+
+
 }
 
+void solve_tran_sweep_system(gsl_vector *temp_gsl_b, gsl_matrix* gsl_A, gsl_vector *curr_gsl_x, double t) {
 
-// get the value of the sin tansient function at time t
-double get_sin_val(sin_spec *data, double t) {
-	double res;
+    // Solve the system based on the solver flag, generated during parsing
 
-    // negative time -> return zero
-	if (t < 0) {
-		printf("Transient Spec Function: Got negative time. Returning zero.\n");
-		res = 0.0;
-	}
-    // t < td 
-	else if (t < data->td) {
-		res = data->i1 + data->ia*sin(2*M_PI/360.0);
-	}
-    // t > td
-	else {
-		res = data->i1 + data->ia * sin(2*M_PI * data->fr*(t - data->td) + 2*M_PI * data->ph/360.0)*exp(-1*(t - data->td)*data->df);
-	}
-	return res;
+    if (solver_type == LU_SOL) {
+        solve_LU_with_args(gsl_A, curr_gsl_x, temp_gsl_b);
+    }
+    else if (solver_type == CHOL_SOL) {
+        gsl_linalg_cholesky_solve(gsl_A, temp_gsl_b, curr_gsl_x);
+    }
+    // else if (solver_type == CG_SOL) {
+    //     solve_cg(temp_gsl_b, temp_gsl_x);
+    // }
+    // else if (solver_type == BICG_SOL) {
+    //     solve_bicg(temp_gsl_b, temp_gsl_x);
+    // }
+    // else if (solver_type == SPARSE_LU_SOL) {
+    //     solve_sparse_lu(temp_gsl_b, temp_gsl_x);
+    // }
+    // else if (solver_type == SPARSE_CHOL_SOL) {
+    //     solve_sparse_chol(temp_gsl_b, temp_gsl_x);
+    // }
+    // if (solver_type == SPARSE_CG_SOL) {
+    //     solve_sparse_cg(temp_gsl_b, temp_gsl_x);
+    // }
+    // else if (solver_type == SPARSE_BICG_SOL) {
+    //     solve_sparse_bicg(temp_gsl_b, temp_gsl_x);
+    // }
+
+    int i;
+    int plot_node_i;
+    double x_vector_value;
+
+    // Plot_node_i: The index of the node(s) that are to be plotted
+    // Sweep_node_i: The index of the node whose value in the b vector changes
+
+    // Get the values that will be printed to the files, then call add_to_plot_file
+    for (i = 0; i < plot_node_count; i++) {
+        plot_node_i = plot_node_indexes[i];
+        x_vector_value = gsl_vector_get(curr_gsl_x, plot_node_i);
+        add_to_plot_file(t, x_vector_value, i);
+
+    }
+
 }
-
-
-// get the value of the pulse transient function at time t
-double get_pulse_val(pulse_spec *data, double t) {
-	double res;
-	double y2, y1;
-	double x1;
-
-
-    // negative time -> return zero
-	if (t < 0) {
-		printf("Transient Spec Function: Got negative time. Returning zero.\n");
-		res = 0.0;
-	}
-    // t < td
-	else if (t < data->td) {
-		res = data->i1;
-	}
-	else {
-		t = t - (int)((t-data->td)/data->per)*data->per;
-
-		if (t < data->td + data->tr) {
-			// i1->i2 linearly
-			/*x2 = data->td + data->tr;*/
-			x1 = data->td;
-			y2 = data->i2;
-			y1 = data->i1;
-			/*res = ((y2-y1)/(x2-x1)) * (t - x1) + y1;*/
-			res = ((y2 - y1)/data->tr)* (t - x1) + y1;
-		}
-		else if (t < data->td + data->tr + data->pw) {
-			res = data->i2;
-		}
-		else if (t < data->td + data->tr + data->pw + data->tf) {
-			// i2->i1 linearly
-			/*x2 = data->td + data->tr + data->pw + data->tf;*/
-			x1 = data->td + data->tr + data->pw;
-			y2 = data->i1;
-			y1 = data->i2;
-			res = ((y2 - y1)/data->tf) * (t - x1) + y1;
-		}
-		else {
-			res = data->i1;
-		}
-	}
-
-	return res;
-}
-
-
-
-// get the value of pwl transient function at time t
-double get_pwl_val(pwl_spec *data, double t) {
-	double res;
-	double y2, y1;
-	double x2, x1;
-	int idx;
-
-	// negative time -> return zero
-	if (t < 0) {
-		printf("Transient Spec Function: Got negative time. Returning zero.\n");
-		res = 0.0;
-	}
-
-	// only one pair is equivalent to a line parallel to x axis (or a constant DC value)
-	if (data->pairs == 1)
-		return data->i[0];
-
-	// t is smaller than the first pair time (return first value)
-	if (t < data->t[0])
-		return data->i[0];
-
-	// t is bigger that the last pair time (return the last value)
-	if (t > data->t[data->pairs-1])
-		return data->i[data->pairs-1];
-
-
-	// find the very FIRST pair with a time bigger than t
-	idx = 0;
-	while (1) {
-		idx++;
-		if (data->t[idx] > t)
-			break;
-	}
-
-	x2 = data->t[idx];
-	x1 = data->t[idx-1];
-	y2 = data->i[idx];
-	y1 = data->i[idx-1];
-	res = ((y2-y1)/(x2-x1))*(t - x1) + y1;
-
-	return res;
-}
-

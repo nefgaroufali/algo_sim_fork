@@ -34,7 +34,8 @@ extern int m2_i;    // Index for circuit branches of type V or L
 extern int lines;   // The number of lines in the input file
 extern int solver_type; // The type of solver (LU or Chol)
 extern double DC_arguments[3];  // The three arguments to .dc: Low, High, Step
-extern int sweep_flag; // When this flag is raised, do dc_sweep
+extern int dc_sweep_flag; // When this flag is raised, do dc_sweep
+extern int tran_sweep_flag; // When this flag is raised, do tran_sweep
 extern float itol; // tolerance as exit condition for iterative solver
 extern int nonzeros_A; // Number of nonzeros, used by sparse structures
 extern int nonzeros_C; // Number of nonzeros, used by sparse structures, for array C(transient)

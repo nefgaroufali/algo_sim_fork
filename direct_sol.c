@@ -115,3 +115,18 @@ void solve_sparse_chol(gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x){
     free(temp_b);
     free(temp_x);
 }
+
+// A LU function with the matrices determined in the arguments
+void solve_LU_with_args(gsl_matrix *gsl_A, gsl_vector *gsl_x, gsl_vector *gsl_b) {
+
+    gsl_permutation *gsl_p = gsl_permutation_alloc(A_dim);
+    int signnum;
+
+    gsl_matrix *gsl_LU = gsl_matrix_alloc(A_dim, A_dim);
+    gsl_matrix_memcpy(gsl_LU, gsl_A);
+
+    gsl_linalg_LU_decomp(gsl_LU, gsl_p, &signnum);
+
+    gsl_linalg_LU_solve(gsl_LU, gsl_p, gsl_b, gsl_x);
+
+}
