@@ -21,7 +21,7 @@ char** m2_array;
 
 
 // This function creates a new component
-component* create_component(char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value) {
+component* create_component(char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value, transient_spec_type spec_type, transient_spec* spec) {
 
     component* new_node = (component*) malloc(sizeof(component));
     if (new_node == NULL) {
@@ -45,15 +45,17 @@ component* create_component(char comp_type, const char* comp_name, const char* p
     strcpy(new_node->negative_node, negative_node);
     new_node->value = value;
     new_node->m2_i = m2_i;
+    new_node->spec_type = spec_type;
+    new_node->spec = spec;
     new_node->next = NULL;
 
     return new_node;
 }
 
 // This functions appends a component to the end of the list
-void append_component(component** head, component **tail, char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value) {
+void append_component(component** head, component **tail, char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value, transient_spec_type spec_type, transient_spec* spec) {
 
-    component* new_node = create_component(comp_type, comp_name, positive_node, negative_node, value);
+    component* new_node = create_component(comp_type, comp_name, positive_node, negative_node, value, spec_type, spec);
 
     // If the head is NULL, the lsit is empty, so we add it in both ends. Else, we only update the tail
 	if (*head == NULL) {
@@ -95,8 +97,9 @@ void print_comp_list(component* head) {
     component* current = head;
 
     while (current != NULL) {
-        printf("Type: %c, Name: %s, Pos Node: %s, Neg Node: %s, Value: %lf m2_i: %d\n",
-               current->comp_type, current->comp_name, current->positive_node, current->negative_node, current->value, current->m2_i);
+        printf("Type: %c, Name: %s, Pos Node: %s, Neg Node: %s, Value: %lf, Spec Type: %d, m2_i: %d\n",
+               current->comp_type, current->comp_name, current->positive_node, current->negative_node, current->value, current->spec_type, current->m2_i);
+        print_spec_numbers(current->spec_type, current->spec);
         current = current->next;
     }
 }
@@ -112,6 +115,11 @@ void free_comp_list(component* head) {
         free(temp->comp_name);
         free(temp->positive_node);
         free(temp->negative_node);
+        if (temp->spec_type == PWL_SPEC) {
+            free(temp->spec->pwl.t);
+            free(temp->spec->pwl.i);
+        }
+        free(temp->spec);
         free(temp);
     }
 }
@@ -326,4 +334,36 @@ void free_m2_array()
         free(m2_array[i]);
     }
     free(m2_array);
+}
+
+// Function to print all numbers of a transient_spec
+void print_spec_numbers(transient_spec_type spec_type, transient_spec *spec) {
+    switch (spec_type) {
+        case EXP_SPEC:
+            printf("EXP_SPEC: %f %f %f %f %f %f\n",
+                   spec->exp.i1, spec->exp.i2, spec->exp.td1, spec->exp.tc1, spec->exp.td2, spec->exp.tc2);
+            break;
+        case SIN_SPEC:
+            printf("SIN_SPEC: %f %f %f %f %f %f\n",
+                   spec->sin.i1, spec->sin.ia, spec->sin.fr, spec->sin.td, spec->sin.df, spec->sin.ph);
+            break;
+        case PULSE_SPEC:
+            printf("PULSE_SPEC: %f %f %f %f %f %f %f\n",
+                   spec->pulse.i1, spec->pulse.i2, spec->pulse.td, spec->pulse.tr, spec->pulse.tf, spec->pulse.pw, spec->pulse.per);
+            break;
+        case PWL_SPEC:
+            printf("PWL_SPEC: %d Pairs\n", spec->pwl.pairs);
+            for (int i = 0; i < spec->pwl.pairs; ++i) {
+                printf("%f %f\n", spec->pwl.t[i], spec->pwl.i[i]);
+            }
+            break;
+        case AC_SPEC:
+            printf("AC_SPEC: %f %f\n", spec->ac.mag, spec->ac.phase);
+            break;
+        case NO_SPEC:
+            printf("NO_SPEC\n");
+            break;
+        default:
+            printf("Unknown spec type\n");
+    }
 }

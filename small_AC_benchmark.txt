@@ -1,0 +1,16 @@
+*TITLE
+
+R1 2 0 2
+I1 0 2 2 AC 2 45
+R2 1 2 4
+V1 1 0 3 AC 3 30
+c1 2 0 5
+l1 1 2 10
+
+.OPTIONS ITER
+
+.DC V1 0 3 0.1
+
+*.TRAN 0.01 1
+
+*.plot v(1)

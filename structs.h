@@ -6,17 +6,6 @@
 #define FOUND 1
 #define NOT_V_OR_I 0
 
-// The structure for a component
-typedef struct component {
-    char comp_type;
-    char* comp_name;
-    char* positive_node;
-    char* negative_node;
-    double value;
-    int m2_i;
-    struct component* next;
-} component;
-
 // The structure for a circuit node
 typedef struct hash_node {
     char *node_str;
@@ -30,6 +19,82 @@ typedef struct {
     int size;
 } hash_table;
 
+// The struct for an EXP transient spec
+typedef struct {
+    double i1;
+    double i2;
+    double td1;
+    double tc1;
+    double td2;
+    double tc2;
+} exp_spec;
+
+// The struct for a SIN transient spec
+typedef struct {
+    double i1;
+    double ia;
+    double fr;
+    double td;
+    double df;
+    double ph;
+} sin_spec;
+
+// The struct for a PULSE transient spec
+typedef struct {
+    double i1;
+    double i2;
+    double td;
+    double tr;
+    double tf;
+    double pw;
+    double per;
+} pulse_spec;
+
+// The struct for a PWL transient spec
+typedef struct {
+    int pairs;
+    double *t;
+    double *i;
+} pwl_spec;
+
+// The struct for AC
+typedef struct {
+    double mag;
+    double phase;
+} ac_spec;
+
+// Define the types of transient specs
+typedef enum {
+    NO_SPEC,
+    EXP_SPEC,
+    PULSE_SPEC,
+    SIN_SPEC,
+    PWL_SPEC,
+    AC_SPEC
+} transient_spec_type;
+
+// Union to represent different transient specs
+typedef union {
+    exp_spec exp;
+    pulse_spec pulse;
+    sin_spec sin;
+    pwl_spec pwl;
+    ac_spec ac;
+} transient_spec;
+
+// The structure for a component
+typedef struct component {
+    char comp_type;
+    char* comp_name;
+    char* positive_node;
+    char* negative_node;
+    double value;
+    int m2_i;
+    transient_spec_type spec_type; 
+    transient_spec *spec;
+    struct component* next;
+} component;
+
 extern component* head;
 extern component* tail;
 extern component *sweep_component;
@@ -41,8 +106,8 @@ extern int node_array_index_counter;
 extern char** m2_array;
 
 // Function declarations
-component* create_component(char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value);
-void append_component(component** head, component **tail, char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value);
+component* create_component(char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value, transient_spec_type spec_type, transient_spec* spec);
+void append_component(component** head, component **tail, char comp_type, const char* comp_name, const char* positive_node, const char* negative_node, double value, transient_spec_type spec_type, transient_spec* spec);
 void print_comp_list(component* head);
 void free_comp_list(component* head);
 int find_component(const char* comp_name);
@@ -60,5 +125,7 @@ void free_m2_array();
 
 void print_hash_table(hash_table *ht);
 void free_hash_table(hash_table *ht);
+
+void print_spec_numbers(transient_spec_type spec_type, transient_spec *spec);
 
 #endif
