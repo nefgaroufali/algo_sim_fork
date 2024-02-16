@@ -10,7 +10,7 @@
 #include "iter_sol.h"
 #include "sparse_sol.h"
 #include "csparse.h"
-#include "math.h"
+#include <math.h>
 #include "string.h"
 #include "gsl.h"
 // Algorithm for the CG algorithm, which is used to solve SPD systems iteratively
@@ -276,6 +276,7 @@ void solve_sparse_cg(cs *sparse_cc_A, gsl_vector* cur_gsl_b, gsl_vector* cur_gsl
     free(diag_a);
 
 }
+
 // Sparse implementation of the BiCG algorithm, which is used to solve non-SPD systems iteratively
 void solve_sparse_bicg(cs *sparse_cc_A, gsl_vector* cur_gsl_b, gsl_vector* cur_gsl_x) {
 
@@ -490,7 +491,7 @@ void solve_bicg_complex(gsl_matrix_complex *cur_gsl_A, gsl_vector_complex* gsl_b
     double b_norm = gsl_blas_dznrm2(gsl_b);  // norm of vector b
     double r_norm = gsl_blas_dznrm2(gsl_r);   // norm of vector r
     gsl_complex rho;
-    gsl_complex rho1 = gsl_complex_rect(1.0, 0.0);
+    gsl_complex rho1 = complex_1;
     gsl_complex beta;
     gsl_complex beta_conj;
     gsl_complex omega;

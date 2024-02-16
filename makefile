@@ -11,7 +11,7 @@ INCLUDES = -I/home/makaragiannis/gsl/include -I/home/makaragiannis/Documents/CXS
 LIBS = -L/home/makaragiannis/gsl/lib -lgsl -lgslcblas -lm -L/home/makaragiannis/Documents/CXSparse-master/Lib -lcxsparse
 
 # Source files
-SRC = main.c parse.c structs.c mna.c direct_sol.c iter_sol.c gsl.c csparse.c sparse_sol.c transient.c ac.c
+SRC = main.c parse.c structs.c mna.c direct_sol.c iter_sol.c gsl.c csparse.c sparse_sol.c transient.c ac.c sparse_ac.c ac_utility.c
 
 # Object files directory
 OBJ_DIR = obj

@@ -3,6 +3,7 @@
 
 #include "structs.h"
 #include "csparse.h"
+#include "gsl.h"
 
 extern cs *sparse_A;    // Sparse array A in triplet form
 extern cs *sparse_cc_A;    // Sparse array A in compressed column form
@@ -23,5 +24,7 @@ void add_to_sparse_A(int k, int i, int j, double x);
 void add_to_sparse_C(int k, int i, int j, double x);
 void print_sparse_arrays();
 void print_sparse_x();
+
+void solve_tran_sweep_system_sparse(gsl_vector *temp_gsl_b, cs* sparse_cc_A, gsl_vector *curr_gsl_x, double t);
 
 #endif

@@ -4,9 +4,9 @@
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_errno.h>
+#include <gsl/gsl_complex.h>
 
 #include "structs.h"
-#include "csparse.h"
 
 #define TRUE 1
 #define FALSE 0
@@ -31,7 +31,7 @@ void print_gsl_vector_complex(gsl_vector_complex *vector, int dim);
 void free_gsl();
 void solve_dc_sweep_system(gsl_vector *temp_gsl_b, double cur_value);
 void solve_tran_sweep_system(gsl_vector *temp_gsl_b, gsl_matrix* gsl_C, gsl_vector *curr_gsl_x, double t);
-void solve_tran_sweep_system_sparse(gsl_vector *temp_gsl_b, cs* sparse_cc_A, gsl_vector *curr_gsl_x, double t);
+
 
 void add_to_plot_file(double b_vector_value, double x_vector_value, int i);
 
