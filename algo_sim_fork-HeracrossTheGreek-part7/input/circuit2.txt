@@ -1,0 +1,5 @@
+* Spice-like input file without .commands
+
+* Define resist
+
+v1 3 0 1

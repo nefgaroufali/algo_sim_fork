@@ -1,0 +1,2 @@
+1) Create a function that raises a flag if a non-spd element is read
+2) 

@@ -1,0 +1,29 @@
+*Example circuit
+
+v1 5 0 2
+v2 3 2 0.2
+v3 7 6 2
+r1 1 5 1.5 
+r2 1 12 1
+r3 5 2 50
+r4 5 6 0.1
+r5 2 6 1.5
+r6 3 4 0.2
+r7 7 0 1e3
+r8 4 0 10
+i1 4 7 1e-3
+i2 0 6 1e-3
+c1 7 0 0.1
+c2 2 0 0.2
+l1 12 2 0.1
+
+.OPTIONS ITER
+*.OPTIONS SPARSE
+*.OPTIONS ITER SPARSE
+
+*.dc v1 0 3 0.01
+*.plot v(4)
+
+*.dc i1 1e-3 3 0.01
+*.plot v(4)
+

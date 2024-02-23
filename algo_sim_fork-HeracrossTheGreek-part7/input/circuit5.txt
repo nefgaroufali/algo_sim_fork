@@ -1,0 +1,16 @@
+*TITLE
+
+R1 2 0 2
+I1 0 2 2
+R2 1 2 4
+V1 1 0 3
+c1 2 0 5
+l1 1 2 10
+
+*.OPTIONS ITER
+.OPTIONS SPARSE
+
+.DC v1 0 4 0.5
+
+.plot v(1)
+.plot v(2)
