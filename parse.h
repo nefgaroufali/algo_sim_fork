@@ -25,6 +25,9 @@
 #define TR 0
 #define BE 1
 
+#define AC_METHOD_LIN 0
+#define AC_METHOD_LOG 1
+
 #define DELIMITERS " /t/n/r"
 
 extern char valid_comp_list[16];
@@ -45,6 +48,10 @@ extern int A_dim;       // The dimension of the square A array, equals n-1+m2
 extern double tran_time_step; // time_step for .tran
 extern double tran_fin_time;  // fin_time for .tran
 extern int tran_method; // TR (trapezoidal) or BE (backward Euler)
+extern int ac_sweep_flag; // When this flag is raised, do ac_sweep
+extern int ac_point_num; // Current point number
+extern int ac_sweep_method; // Method for ac: 0 for linear, 1 for logarithmic
+extern double* ac_sweep_points; // Array of points for .ac
 
 void number_of_lines(char *file_name);
 void parse(char *file_name);
@@ -60,6 +67,7 @@ int option_command(char* token);
 int dc_command(char* token);
 int plot_command(char* token) ;
 int tran_command(char *token);
+int ac_command(char *token);
 int increment_nonzeros_A(char comp_type, char* positive_node, char* negative_node);
 int increment_nonzeros_C(char comp_type, char* positive_node, char* negative_node);
 transient_spec_type parse_spec_type(char *token);

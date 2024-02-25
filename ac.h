@@ -20,6 +20,6 @@ void fill_ac_A_with_l(double complex* temp_ac_A_array, component* current, int *
 
 void print_ac_A_array(double complex* temp_ac_A_array);
 
-void solve_ac_sweep_system(gsl_matrix_complex *temp_gsl_ac_A_array);
+void solve_ac_sweep_system(gsl_matrix_complex *temp_gsl_ac_A_array, double freq);
 
 #endif

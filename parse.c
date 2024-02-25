@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
 #include "parse.h"
 #include "gsl.h"
 #include "direct_sol.h"
@@ -28,6 +29,10 @@ int spd_flag_circuit = 1;
 double tran_time_step = 0;
 double tran_fin_time = 0;
 int tran_method = TR;
+int ac_sweep_flag = 0;
+int ac_sweep_method = AC_METHOD_LIN;
+double *ac_sweep_points = NULL;
+int ac_point_num;
 
 char circuit_name[30];  // the name circuit taken from the file name
 
@@ -500,6 +505,12 @@ int parse_spice_command(char* token)
 
     }
 
+    //.ac //
+    else if (strcmp(str_tolower(token), ".ac") == 0) {
+        parsing_result = ac_command(token);
+
+    }
+
     return parsing_result; //SUCCESSFUL or ERROR
 }
 
@@ -709,6 +720,78 @@ int tran_command(char *token) {
     tran_fin_time = strtod(token, NULL);
 
     tran_sweep_flag = 1;
+
+    return PARSING_SUCCESSFUL;
+}
+
+int ac_command(char *token) {
+
+    double start_freq;
+    double end_freq;
+    int points;
+    double step;
+
+    token = strtok(NULL, " \t\n\r");
+    if(token == NULL) {
+        return PARSING_ERROR;
+    }
+
+    if(strcmp(str_tolower(token), "lin") == 0) {
+        ac_sweep_method = AC_METHOD_LIN;
+    }
+    else if(strcmp(str_tolower(token), "log") == 0) {
+        ac_sweep_method = AC_METHOD_LOG;
+    }
+    else if(strcmp(str_tolower(token), "dec") == 0) {
+        ac_sweep_method = AC_METHOD_LOG;
+    }
+    else {
+        return PARSING_ERROR;
+    }
+
+    token = strtok(NULL, " \t\n\r");
+    if(token == NULL) {
+        return PARSING_ERROR;
+    }
+
+    points = atoi(token);
+
+    token = strtok(NULL, " \t\n\r");
+    if(token == NULL) {
+        return PARSING_ERROR;
+    }
+
+    start_freq = strtod(token, NULL);
+
+    token = strtok(NULL, " \t\n\r");
+    if(token == NULL) {
+        return PARSING_ERROR;
+    }
+
+    end_freq = strtod(token, NULL);
+
+    ac_sweep_flag = 1;
+
+    if(ac_sweep_method == 0)
+        ac_point_num = points;
+    else{
+        int decades = (int)(log10(end_freq) - log10(start_freq));
+        ac_point_num = points*decades+1;
+    }
+
+    ac_sweep_points = (double*)malloc(ac_point_num*sizeof(double));
+
+    if(ac_sweep_method == AC_METHOD_LIN){
+
+        step = (end_freq - start_freq) / (points-1);
+
+        for(int i = 0; i < ac_point_num; i++)
+            ac_sweep_points[i] = start_freq +i*step;
+    }
+    else{
+        for(int i = 0; i < ac_point_num; i++)
+            ac_sweep_points[i] = pow(10,log10(start_freq) + i*(log10(end_freq) - log10(start_freq))/(ac_point_num-1));
+    }
 
     return PARSING_SUCCESSFUL;
 }

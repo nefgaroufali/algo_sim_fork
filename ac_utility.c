@@ -122,6 +122,27 @@ double complex convert_to_complex(double mag, double phase) {
 
 }
 
+// get magnitude (in 20log) and phase
+double get_magnitude(double complex complex_num, int ac_sweep_method) {
+
+    double magnitude = sqrt(creal(complex_num)*creal(complex_num) + cimag(complex_num)*cimag(complex_num));
+    if (ac_sweep_method == AC_METHOD_LIN) {
+        return magnitude;
+    }
+    else {
+        return 20*log10(magnitude);
+    }
+}
+
+double get_phase(double complex complex_num) {
+    
+    double phase_rad = atan2(cimag(complex_num), creal(complex_num));
+
+    return phase_rad * 180 / M_PI;
+
+    //return phase_rad;
+}
+
 void print_ac_vector(double complex* ac_vector) {
 
     int i;
@@ -131,6 +152,39 @@ void print_ac_vector(double complex* ac_vector) {
         printf("%.2lf + i*%.2lf\n", creal(ac_vector[i]), cimag(ac_vector[i]));
     }
     printf("\n");
+
+
+}
+
+void create_ac_gnuplot(int i, int ac_sweep_method) {
+
+
+    // Generate a temporary script file to run the GNU Plot commands
+    FILE *gnuplotScript = fopen("plot_script_ac.gnu", "w");
+    if (gnuplotScript == NULL) {
+        printf("Error creating GNU Plot script file\n");
+        return;
+    }
+
+    // Write the GNU Plot command to the script file
+    fprintf(gnuplotScript, "set terminal png; set output 'output/%s_%d_db.png'\n", circuit_name, i);
+
+    if (ac_sweep_method == AC_METHOD_LOG) fprintf(gnuplotScript, "set logscale x\n");
+
+    fprintf(gnuplotScript, "set xlabel \"Frequency (Hz)\"\n");
+    fprintf(gnuplotScript, "set ylabel \"Magnitude (dB))\"\n");
+    fprintf(gnuplotScript, "set title \"Bode diagram\"\n\n");
+    fprintf(gnuplotScript, "plot 'output/%s_%d.txt' using 1:2 with lines title \"Magnitude\"\n", circuit_name, i);
+
+    fprintf(gnuplotScript, "set terminal png; set output 'output/%s_%d_phase.png'\n", circuit_name, i);
+
+    if (ac_sweep_method == AC_METHOD_LOG) fprintf(gnuplotScript, "set logscale x\n");
+
+    fprintf(gnuplotScript, "set ylabel \"Phase (degrees))\"\n");
+    fprintf(gnuplotScript, "set title \"Phase diagram\"\n\n");
+    fprintf(gnuplotScript, "plot 'output/%s_%d.txt' using 1:3 with lines title \"Phase\"\n", circuit_name, i);
+    
+    fclose(gnuplotScript);
 
 
 }

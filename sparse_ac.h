@@ -12,7 +12,7 @@ extern cs_ci *sparse_ac_A;    // Sparse array A in triplet form
 extern cs_ci *sparse_ac_cc_A;    // Sparse array A in compressed column form
 
 void ac_sweep_sparse();
-void solve_ac_sweep_system_sparse(cs_ci *sparse_ac_cc_A);
+void solve_ac_sweep_system_sparse(cs_ci *sparse_ac_cc_A, double freq);
 
 cs_ci* form_ac_sparse_A(double omega);
 

@@ -2,7 +2,7 @@
 CC = gcc
 
 # Compiler flags
-CFLAGS = -Wall -g -std=c11
+CFLAGS = -Wall -g -std=c11 -O3
 
 # Include directories
 INCLUDES = -I/home/makaragiannis/gsl/include -I/home/makaragiannis/Documents/CXSparse-master/Include

@@ -252,11 +252,11 @@ void add_to_plot_file(double b_vector_value, double x_vector_value, int i) {
     fprintf(gnuplotScript, "%s", plot_command);
     fclose(gnuplotScript);
     
-    // // // Execute GNU Plot using the script file
-    // system("gnuplot plot_script.gnu");
+    // // Execute GNU Plot using the script file
+    system("gnuplot plot_script.gnu");
 
-    // // // Clean up: remove the temporary script file
-    // remove("plot_script.gnu");
+    // // Clean up: remove the temporary script file
+    remove("plot_script.gnu");
 }
 
 // This function frees the memory occupied by the plot node indexes
@@ -458,6 +458,7 @@ void tran_sweep() {
 
             // Current x becomes previous x
             gsl_vector_memcpy(prev_gsl_x, curr_gsl_x);
+
             // Current e becomes previous e
             gsl_vector_memcpy(prev_temp_gsl_b, temp_gsl_b);
 

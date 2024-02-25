@@ -18,6 +18,10 @@ void fill_ac_bvector_with_v(double complex* ac_b_vector, component* current, int
 void fill_ac_bvector_with_l(double complex* ac_b_vector, component* current, int *m2_count_ac);
 
 double complex convert_to_complex(double mag, double phase);
+double get_magnitude(double complex complex_num, int ac_sweep_method);
+double get_phase(double complex complex_num);
+
+void create_ac_gnuplot(int i, int ac_sweep_method);
 
 
 

@@ -28,9 +28,9 @@ void ac_sweep() {
         gsl_vector_complex_set(gsl_ac_b_vector, i, ac_b_vector[i]);
     }
 
-    double iter_num = 10;
-    for (double freq=0; freq<iter_num; freq++) {
+    for (int k=0; k<ac_point_num; k++) {
 
+        double freq = ac_sweep_points[k];
         omega=2*M_PI*freq;
 
         // fill AC array in double complex form
@@ -44,7 +44,7 @@ void ac_sweep() {
             }
         }
         
-        solve_ac_sweep_system(temp_gsl_ac_A_array);
+        solve_ac_sweep_system(temp_gsl_ac_A_array, freq);
 
         //print_gsl_matrix_complex(temp_gsl_ac_A_array, A_dim);
         memset(temp_ac_A_array, 0, sizeof(double complex) *A_dim*A_dim);
@@ -216,7 +216,7 @@ void fill_ac_A_with_l(double complex* temp_ac_A_array, component *current, int *
     return;
 }
 
-void solve_ac_sweep_system(gsl_matrix_complex *temp_gsl_ac_A_array) {
+void solve_ac_sweep_system(gsl_matrix_complex *temp_gsl_ac_A_array, double freq) {
 
     gsl_vector_complex *temp_gsl_x;
 
@@ -226,38 +226,70 @@ void solve_ac_sweep_system(gsl_matrix_complex *temp_gsl_ac_A_array) {
 
     if (solver_type == LU_SOL) {
         solve_LU_complex(temp_gsl_ac_A_array, gsl_ac_b_vector, temp_gsl_x);
-        printf("x is \n");
-        print_gsl_vector_complex(temp_gsl_x, A_dim);
+        // printf("x is \n");
+        // print_gsl_vector_complex(temp_gsl_x, A_dim);
     }
 
 
     else if (solver_type == BICG_SOL) {
         solve_bicg_complex(temp_gsl_ac_A_array, gsl_ac_b_vector, temp_gsl_x);
-        printf("x is \n");
-        print_gsl_vector_complex(temp_gsl_x, A_dim);
+        // printf("x is \n");
+        // print_gsl_vector_complex(temp_gsl_x, A_dim);
     }
-    // else if (solver_type == SPARSE_BICG_SOL) {
-    //     solve_sparse_bicg(sparse_cc_A, temp_gsl_b, temp_gsl_x);
-    // }
 
-    // int i;
-    // int plot_node_i;
-    // double b_vector_value, x_vector_value;
+        int i;
+    int plot_node_i;
+    double magnitude, phase;
+    double complex x_vector_value;
 
-    // // Plot_node_i: The index of the node(s) that are to be plotted
-    // // Sweep_node_i: The index of the node whose value in the b vector changes
+    // Plot_node_i: The index of the node(s) that are to be plotted
+    // Sweep_node_i: The index of the node whose value in the b vector changes
 
-    // // Get the values that will be printed to the files, then call add_to_plot_file
-    // for (i = 0; i < plot_node_count; i++) {
-    //     plot_node_i = plot_node_indexes[i];
-    //     b_vector_value = cur_value;
-    //     x_vector_value = gsl_vector_get(temp_gsl_x, plot_node_i);
-    //     add_to_plot_file(b_vector_value, x_vector_value, i);
+    // Get the values that will be printed to the files, then call add_to_plot_file
+    for (i = 0; i < plot_node_count; i++) {
+        plot_node_i = plot_node_indexes[i];
+        x_vector_value = gsl_vector_complex_get(temp_gsl_x, plot_node_i);
+        magnitude = get_magnitude(x_vector_value, ac_sweep_method);
+        phase = get_phase(x_vector_value);
 
-    // }
+        ///////////////
+        // Check if the file corresponding to i is already open
+        if (filePointers[i] == NULL) {
+            char filename[60];
+            snprintf(filename, sizeof(filename), "output/%s_%d.txt", circuit_name, i);
 
-    // //gsl_vector_memcpy(gsl_x, temp_gsl_x); // copy the value to gsl_x, so that it is the initial value for the next cg/bicg
-    // gsl_vector_free(temp_gsl_x);
+            // Open the file in write mode inside the "output" subdirectory
+            filePointers[i] = fopen(filename, "w");
+
+            // Check if the file is opened successfully
+            if (filePointers[i] == NULL) {
+                printf("Error opening file %d\n", i);
+                return;
+            }
+        }
+
+        //////////
+
+        // Write the values to the file
+        fprintf(filePointers[i], "%.3e %.3e %.3f\n", freq, magnitude, phase);
+
+        // Flush the file buffer to ensure data is written immediately
+        fflush(filePointers[i]);
+
+        // Code to generate the GNU Plot command to create the plot
+
+        create_ac_gnuplot(i, ac_sweep_method);
+
+                
+        // // Execute GNU Plot using the script file
+        system("gnuplot plot_script_ac.gnu");
+
+        // // Clean up: remove the temporary script file
+        remove("plot_script_ac.gnu");
+        //////////
+    }
+     
+    gsl_vector_complex_free(temp_gsl_x);
 
 }
 

@@ -100,15 +100,9 @@ int main(int argc, char* argv[]) {
         if (solver_type<4) tran_sweep();
         else tran_sweep_sparse();
     }
-
-    int ac_sweep_flag = TRUE;
-    //int ac_sweep_flag = FALSE;
     if (ac_sweep_flag == TRUE) {
         if (solver_type<4) ac_sweep();
         else ac_sweep_sparse();
-        
-        // print_ac_vector();
-        // print_gsl_vector_complex(gsl_ac_b_vector, A_dim);
     }
     
     
